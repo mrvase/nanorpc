@@ -49,8 +49,8 @@ importers:
       typescript: ^5.0.4
       zod: ^3.21.4
     dependencies:
-      '@nanorpc/client': link:../../packages/client
-      '@nanorpc/server': link:../../packages/server
+      '@nanorpc/client': 0.0.1_hdhz5gzd4g3sje5ghkqei5ypmu
+      '@nanorpc/server': 0.0.1_qs@6.11.2+zod@3.21.4
       next: 13.4.1_biqbaboplfbrettd7655fr4n2y
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
@@ -67,7 +67,7 @@ importers:
   packages/client:
     specifiers:
       '@nanorpc/eslint-config': 0.0.0
-      '@nanorpc/server': 0.0.1
+      '@nanorpc/server': 0.0.2
       '@nanorpc/tsconfig': 0.0.0
       '@types/qs': ^6.9.7
       '@types/react': ^18.2.4
@@ -613,6 +613,30 @@ packages:
       globby: 11.1.0
       read-yaml-file: 1.1.0
     dev: true
+
+  /@nanorpc/client/0.0.1_hdhz5gzd4g3sje5ghkqei5ypmu:
+    resolution: {integrity: sha512-zYRebQggshhkuTPNCsP1EdgNQFYOxJy6Ax8ZLLMp2WxepBzcH9NleWwyYvlcyoJ2nIVel1n0AwLOcAGP34MSwA==}
+    peerDependencies:
+      qs: ^6.11.0
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      swr: ^2.1.5
+    dependencies:
+      qs: 6.11.2
+      react: 18.2.0
+      react-dom: 18.2.0_react@18.2.0
+      swr: 2.1.5_react@18.2.0
+    dev: false
+
+  /@nanorpc/server/0.0.1_qs@6.11.2+zod@3.21.4:
+    resolution: {integrity: sha512-nALKNkcWdM3pHDhCJwC+Nhd7Bkikq3/zhMV+jNxYb8fw/T6ShG0k44m7u5eE2gUyf2LPcNyn6a+Kmn/k9yCujg==}
+    peerDependencies:
+      qs: ^6.11.0
+      zod: ^3.21.4
+    dependencies:
+      qs: 6.11.2
+      zod: 3.21.4
+    dev: false
 
   /@next/env/13.4.1:
     resolution: {integrity: sha512-eD6WCBMFjLFooLM19SIhSkWBHtaFrZFfg2Cxnyl3vS3DAdFRfnx5TY2RxlkuKXdIRCC0ySbtK9JXXt8qLCqzZg==}
@@ -3198,7 +3222,6 @@ packages:
     engines: {node: '>=0.6'}
     dependencies:
       side-channel: 1.0.4
-    dev: true
 
   /queue-microtask/1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
