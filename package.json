@@ -8,12 +8,13 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "turbo build --filter=docs^... && changeset publish"
+    "release": "turbo build && changeset publish",
+    "publish-packages": "turbo run build lint test && changeset version && changeset publish"
   },
   "devDependencies": {
+    "@nanorpc/eslint-config": "0.0.0",
     "@changesets/cli": "^2.22.0",
     "eslint": "^7.32.0",
-    "eslint-config-nanorpc": "workspace:*",
     "prettier": "^2.5.1",
     "turbo": "^1.9.3"
   },

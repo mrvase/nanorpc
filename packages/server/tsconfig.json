@@ -1,5 +1,5 @@
 {
-  "extends": "tsconfig/node14.json",
+  "extends": "@nanorpc/tsconfig/node14.json",
   "include": ["."],
   "exclude": ["dist", "build", "node_modules"]
 }

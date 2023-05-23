@@ -1,10 +1,11 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@2.0.0/schema.json",
-  "changelog": "@changesets/cli/changelog",
+  "changelog": ["@changesets/cli/changelog", { "repo": "mrvase/nanorpc" }],
   "commit": false,
-  "fixed": [],
+  "fixed": [["@nanorpc/client", "@nanorpc/server"]],
   "linked": [],
   "access": "public",
+  "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["nextjs"]
+  "ignore": ["@example/next"]
 }
