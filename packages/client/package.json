@@ -1,0 +1,65 @@
+{
+  "name": "@nanorpc/client",
+  "version": "0.0.1",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "license": "MIT",
+  "files": [
+    "dist/**"
+  ],
+  "scripts": {
+    "build": "tsup --entry src/index.ts --entry src/swr.ts --format esm,cjs --minify --dts",
+    "dev": "tsup --entry src/index.ts --entry src/swr.ts --format esm,cjs --watch --dts",
+    "lint": "eslint \"src/**/*.ts*\"",
+    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/qs": "^6.9.7",
+    "@types/react": "^18.2.4",
+    "@types/react-dom": "^18.2.4",
+    "eslint": "^7.32.0",
+    "eslint-config-nanorpc": "workspace:*",
+    "@nanorpc/server": "workspace:*",
+    "qs": "^6.11.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "swr": "^2.1.5",
+    "tsconfig": "workspace:*",
+    "tsup": "^6.7.0",
+    "typescript": "^5.0.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "qs": "^6.11.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "swr": "^2.1.5"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./swr": {
+      "import": "./dist/swr.mjs",
+      "require": "./dist/swr.js",
+      "default": "./dist/swr.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/index.d.ts"
+      ],
+      "swr": [
+        "dist/swr.d.ts"
+      ]
+    }
+  }
+}

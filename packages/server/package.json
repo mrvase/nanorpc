@@ -1,0 +1,59 @@
+{
+  "name": "@nanorpc/server",
+  "version": "0.0.1",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "license": "MIT",
+  "files": [
+    "dist/**"
+  ],
+  "scripts": {
+    "build": "tsup --entry src/index.ts --entry src/adapters/next.ts --format esm,cjs --minify --dts --external next",
+    "dev": "tsup --entry src/index.ts --entry src/adapters/next.ts --format esm,cjs --watch --dts --external next",
+    "lint": "eslint \"src/**/*.ts*\"",
+    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/qs": "^6.9.7",
+    "eslint": "^7.32.0",
+    "eslint-config-nanorpc": "workspace:*",
+    "next": "13.4.2",
+    "qs": "^6.11.0",
+    "tsconfig": "workspace:*",
+    "tsup": "^6.7.0",
+    "typescript": "^5.0.4",
+    "zod": "^3.21.4"
+  },
+  "peerDependencies": {
+    "qs": "^6.11.0",
+    "zod": "^3.21.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./adapters/next": {
+      "import": "./dist/adapters/next.mjs",
+      "require": "./dist/adapters/next.js",
+      "default": "./dist/adapters/next.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/index.d.ts"
+      ],
+      "adapters/next": [
+        "dist/adapters/next.d.ts"
+      ]
+    }
+  }
+}
