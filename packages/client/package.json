@@ -1,6 +1,6 @@
 {
   "name": "@nanorpc/client",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -22,7 +22,7 @@
     "@types/react": "^18.2.4",
     "@types/react-dom": "^18.2.4",
     "eslint": "^7.32.0",
-    "@nanorpc/server": "0.0.1",
+    "@nanorpc/server": "0.0.2",
     "qs": "^6.11.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
