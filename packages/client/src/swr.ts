@@ -98,10 +98,6 @@ export function SWRCacheMiddleware<
   };
 }
 
-type InferArgs<TProcedure> = TProcedure extends (...args: infer Args) => any
-  ? Args
-  : never;
-
 type InferInput<TProcedure> = TProcedure extends (
   input: infer Input,
   opts?: any
@@ -122,15 +118,6 @@ type InferResult<TProcedure> = TProcedure extends (
 ) => Promise<infer Result>
   ? Result
   : never;
-
-/*
-type InferResult<TProcedure> = TProcedure extends (
-  input: any,
-  opts?: any
-) => Promise<infer Result>
-  ? Exclude<Result, ErrorCodes<string>>
-  : never;
-*/
 
 type OnlyData<T> = Exclude<T, ErrorCodes<string>>;
 
