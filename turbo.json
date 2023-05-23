@@ -6,6 +6,7 @@
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
       "dependsOn": ["^build"]
     },
+    "typecheck": {},
     "test": {
       "outputs": ["coverage/**"],
       "dependsOn": []

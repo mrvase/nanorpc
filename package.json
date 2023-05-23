@@ -2,6 +2,8 @@
   "private": true,
   "scripts": {
     "build": "turbo build",
+    "test": "FORCE_COLOR=1 turbo test",
+    "typecheck": "turbo typecheck",
     "dev": "turbo dev --no-cache --continue",
     "lint": "turbo lint",
     "clean": "turbo clean && rm -rf node_modules",
@@ -9,7 +11,7 @@
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "turbo build && changeset publish",
-    "publish-packages": "turbo run build lint test && changeset version && changeset publish"
+    "publish-packages": "turbo run build lint test typecheck && changeset version && changeset publish"
   },
   "devDependencies": {
     "@nanorpc/eslint-config": "0.0.0",

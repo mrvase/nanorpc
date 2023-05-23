@@ -13,17 +13,20 @@
     "build": "tsup --entry src/index.ts --entry src/adapters/next.ts --format esm,cjs --minify --dts --external next",
     "dev": "tsup --entry src/index.ts --entry src/adapters/next.ts --format esm,cjs --watch --dts --external next",
     "lint": "eslint \"src/**/*.ts*\"",
-    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist"
+    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@nanorpc/tsconfig": "0.0.0",
     "@nanorpc/eslint-config": "0.0.0",
+    "@nanorpc/tsconfig": "0.0.0",
     "@types/qs": "^6.9.7",
     "eslint": "^7.32.0",
     "next": "13.4.2",
     "qs": "^6.11.0",
     "tsup": "^6.7.0",
     "typescript": "^5.0.4",
+    "vitest": "^0.31.1",
     "zod": "^3.21.4"
   },
   "peerDependencies": {
