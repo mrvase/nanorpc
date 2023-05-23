@@ -244,7 +244,8 @@ const createProcedureFromState = <
             if (input instanceof RPCError) {
               throw input;
             }
-          } else if (input instanceof ZodType) {
+          }
+          if (schema instanceof ZodType) {
             try {
               schema.parse(input);
             } catch (e) {

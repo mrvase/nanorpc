@@ -61,9 +61,8 @@ type TurnIntoMutations<
     : never;
 };
 
-type Options = {
-  method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
-  swr?: boolean;
+export type Options = {
+  method?: "GET" | "POST";
   headers?: Record<string, string>;
   body?: string;
 };
@@ -95,7 +94,7 @@ export function withMiddleware<
 >(
   fetcher: Fetcher<TOptions>,
   middleware: Middlewares
-): Fetcher<MergeOptions<Middlewares, TOptions>> {
+): Fetcher<TOptions & MergeOptions<Middlewares, {}>> {
   return middleware.reduce(
     (fetcher, middleware) => middleware(fetcher),
     fetcher

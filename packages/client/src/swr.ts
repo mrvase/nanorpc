@@ -1,5 +1,5 @@
 import React from "react";
-import type { Fetcher, MUTATE } from ".";
+import { Fetcher, MUTATE, Options, withMiddleware } from ".";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import { cache, mutate } from "swr/_internal";
@@ -78,10 +78,31 @@ export function useQuery<
   } & {}; // basically an omit of "mutate", but this makes the output type pretty
 }
 
-export function SWRCacheMiddleware<
-  TOptions extends { method?: string; swr?: boolean }
->(fetcher: Fetcher<TOptions>) {
+function SWRDedupeMiddleware<TOptions extends Options>(
+  fetcher: Fetcher<TOptions>
+) {
+  const FETCH: Record<string, Promise<any>> = {};
+
   return async (key: string, options: TOptions & { skipCache?: boolean }) => {
+    if (options.method === "GET" && !(key in FETCH)) {
+      FETCH[key] = fetcher(key, options);
+    }
+    const result = await FETCH[key];
+    setTimeout(() => {
+      // allow cache to be set and catch anteceding fetches
+      if (key in FETCH) delete FETCH[key];
+    });
+    return result;
+  };
+}
+
+function SWRCacheMiddleware<TOptions extends Options>(
+  fetcher: Fetcher<TOptions>
+) {
+  return async (
+    key: string,
+    options: TOptions & { skipCache?: boolean; swr?: boolean }
+  ) => {
     if (options.method === "GET" && !options.swr && !options.skipCache) {
       let cached = cache.get(key)?.data;
       if (cached) {
@@ -96,6 +117,12 @@ export function SWRCacheMiddleware<
     }
     return await promise;
   };
+}
+
+export function SWRMiddleware<TOptions extends Options>(
+  fetcher: Fetcher<TOptions>
+) {
+  return withMiddleware(fetcher, [SWRDedupeMiddleware, SWRCacheMiddleware]);
 }
 
 type InferInput<TProcedure> = TProcedure extends (
