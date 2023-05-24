@@ -70,7 +70,7 @@ export type Options = {
 export type Fetcher<TOptions> = (
   key: string,
   options: TOptions
-) => Promise<Response>;
+) => Promise<any>;
 
 type FetcherMiddleware = (fetcher: Fetcher<any>) => Fetcher<any>;
 
@@ -101,11 +101,9 @@ export function withMiddleware<
   );
 }
 
-const PROXY_CACHE: Record<string, any> = {};
-
 export const createClient = <TRouter extends Record<string, any>>(
   url: string
-) => {
+  ) => {
   return <TFetcher extends Fetcher<any>>(
     fetcher: TFetcher,
     globalOptions?: TFetcher extends Fetcher<infer TOptions>
@@ -125,6 +123,8 @@ export const createClient = <TRouter extends Record<string, any>>(
       >
     >;
   } => {
+    const PROXY_CACHE: Record<string, any> = {};
+
     const createProxy = (type: "query" | "mutate", path: string): any => {
       const getKey = (input: any) => {
         return [`${url}${path}`, qs.stringify({ input })].filter(Boolean).join("?");
@@ -193,6 +193,7 @@ export const createClient = <TRouter extends Record<string, any>>(
 
       return proxy;
     };
+
     return {
       query: createProxy("query", ""),
       mutate: createProxy("mutate", ""),

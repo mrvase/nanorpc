@@ -84,7 +84,7 @@ function SWRDedupeMiddleware<TOptions extends Options>(
   const FETCH: Record<string, Promise<any>> = {};
 
   return async (key: string, options: TOptions & { skipCache?: boolean }) => {
-    if (options.method === "GET" && !(key in FETCH)) {
+    if (options.method !== "GET" || !(key in FETCH)) {
       FETCH[key] = fetcher(key, options);
     }
     const result = await FETCH[key];
@@ -96,34 +96,46 @@ function SWRDedupeMiddleware<TOptions extends Options>(
   };
 }
 
-function SWRCacheMiddleware<TOptions extends Options>(
-  fetcher: Fetcher<TOptions>
-) {
-  return async (
-    key: string,
-    options: TOptions & { skipCache?: boolean; swr?: boolean }
-  ) => {
-    if (options.method === "GET" && !options.swr && !options.skipCache) {
-      let cached = cache.get(key)?.data;
-      if (cached) {
-        return cached?.data;
+const createSWRCacheMiddleware = (
+  middlewareOptions: {
+    cache: typeof cache;
+    mutate: typeof mutate;
+  } = { cache, mutate }
+) => {
+  const { cache, mutate } = middlewareOptions;
+  return <TOptions extends Options>(fetcher: Fetcher<TOptions>) => {
+    return async (
+      key: string,
+      options: TOptions & { skipCache?: boolean; swr?: boolean }
+    ) => {
+      if (options.method === "GET" && !options.swr && !options.skipCache) {
+        let cached = cache.get(key)?.data;
+        if (cached) {
+          return cached?.data;
+        }
       }
-    }
-    const promise = fetcher(key, options);
-    if (!options.swr) {
-      return await mutate(key, async () => {
-        return await promise;
-      });
-    }
-    return await promise;
+      const promise = fetcher(key, options);
+      if (!options.swr) {
+        return await mutate(key, async () => {
+          return await promise;
+        });
+      }
+      return await promise;
+    };
   };
-}
+};
 
-export function SWRMiddleware<TOptions extends Options>(
-  fetcher: Fetcher<TOptions>
-) {
-  return withMiddleware(fetcher, [SWRDedupeMiddleware, SWRCacheMiddleware]);
-}
+export const createSWRMiddleware = (options?: {
+  cache: typeof cache;
+  mutate: typeof mutate;
+}) => {
+  return <TOptions extends Options>(fetcher: Fetcher<TOptions>) => {
+    return withMiddleware(fetcher, [
+      SWRDedupeMiddleware,
+      createSWRCacheMiddleware(options),
+    ]);
+  };
+};
 
 type InferInput<TProcedure> = TProcedure extends (
   input: infer Input,

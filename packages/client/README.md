@@ -18,8 +18,8 @@ pnpm add @nanorpc/client
 This setup imports the type of your router to get end-to-end typesafety. See [@nanorpc/server](https://github.com/mrvase/nanorpc/tree/main/packages/server) to learn more.
 
 ```ts
-import { createClient, isError, withMiddleware } from "@nanorpc/client";
-import { SWRCacheMiddleware } from "@nanorpc/client/swr";
+import { createClient, withMiddleware } from "@nanorpc/client";
+import { createSWRMiddleware } from "@nanorpc/client/swr";
 import type { Router } from "./server";
 
 let fetcher = async (key, options) => {
@@ -28,7 +28,7 @@ let fetcher = async (key, options) => {
 
 // Optionally use the SWR cache middleware
 // to store and retrieve data from the cache
-fetcher = withMiddleware(fetcher, [SWRCacheMiddleware]);
+fetcher = withMiddleware(fetcher, [createSWRMiddleware()]);
 
 export const { query, mutate } = createClient<Router>("/api")(fetcher);
 ```
@@ -36,6 +36,9 @@ export const { query, mutate } = createClient<Router>("/api")(fetcher);
 ### Call your remote procedure
 
 ```ts
+import { isError } from "@nanorpc/client";
+import { query, mutate } from "./client";
+
 async function getPost(id: string) {
   // Get the fully typed post
   const response = await query.getPost(id);
