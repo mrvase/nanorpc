@@ -1,5 +1,6 @@
 import { render } from "@testing-library/react";
 import { SWRConfig } from "swr";
+import { cache } from "swr/_internal";
 
 export function sleep(time: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, time));
@@ -30,4 +31,10 @@ export const renderWithConfig = (
     <SWRConfig value={{ provider, ...config }}>{children}</SWRConfig>
   );
   return render(element, { wrapper: TestSWRConfig });
+};
+
+export const clearCache = () => {
+  for (let key of cache.keys()) {
+    cache.delete(key);
+  }
 };
