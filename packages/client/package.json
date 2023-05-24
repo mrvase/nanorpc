@@ -13,22 +13,31 @@
     "build": "tsup --entry src/index.ts --entry src/swr.ts --format esm,cjs --minify --dts",
     "dev": "tsup --entry src/index.ts --entry src/swr.ts --format esm,cjs --watch --dts",
     "lint": "eslint \"src/**/*.ts*\"",
-    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist"
+    "clean": "rm -rf .turbo && rm -rf node_modules && rm -rf dist",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@nanorpc/tsconfig": "0.0.0",
     "@nanorpc/eslint-config": "0.0.0",
+    "@nanorpc/server": "0.0.2",
+    "@nanorpc/tsconfig": "0.0.0",
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^14.0.0",
     "@types/qs": "^6.9.7",
     "@types/react": "^18.2.4",
     "@types/react-dom": "^18.2.4",
+    "@types/testing-library__jest-dom": "^5.14.6",
+    "@vitejs/plugin-react": "^4.0.0",
     "eslint": "^7.32.0",
-    "@nanorpc/server": "0.0.2",
+    "jsdom": "^22.0.0",
     "qs": "^6.11.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "swr": "^2.1.5",
     "tsup": "^6.7.0",
-    "typescript": "^5.0.4"
+    "typescript": "^5.0.4",
+    "vite": "^4.3.8",
+    "vitest": "^0.31.1"
   },
   "publishConfig": {
     "access": "public"

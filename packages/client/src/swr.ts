@@ -84,7 +84,7 @@ function SWRDedupeMiddleware<TOptions extends Options>(
   const FETCH: Record<string, Promise<any>> = {};
 
   return async (key: string, options: TOptions & { skipCache?: boolean }) => {
-    if (options.method === "GET" && !(key in FETCH)) {
+    if (options.method !== "GET" || !(key in FETCH)) {
       FETCH[key] = fetcher(key, options);
     }
     const result = await FETCH[key];
