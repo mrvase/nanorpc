@@ -1,9 +1,11 @@
+import { vi } from "vitest";
 import { createResponse, renderWithConfig, sleep } from "./utils";
 import { render, screen } from "@testing-library/react";
 import { createProcedure } from "@nanorpc/server";
 import { createClient, withMiddleware } from "../src";
 import { createSWRMiddleware, useQuery } from "../src/swr";
-import { cache } from "swr/_internal";
+import { SWRConfig, useSWRConfig } from "swr";
+import React from "react";
 
 const router = {
   users: {
@@ -67,10 +69,6 @@ describe("", () => {
   });
 
   it("makes only a single fetch with deduping", async () => {
-    for (let key of cache.keys()) {
-      cache.delete(key);
-    }
-
     let count = 0;
     function fetcher<TOptions>(key: string, options: TOptions) {
       ++count;
@@ -101,13 +99,18 @@ describe("", () => {
     expect(count).toBe(1);
   });
 
-  /*
-  it("makes only a single fetch with cache", async () => {
+  it("uses local cache when provided", async () => {
     let count = 0;
     function fetcher<TOptions>(key: string, options: TOptions) {
       ++count;
       return createResponse(fetch(key));
     }
+
+    const cache = new Map();
+
+    const spy = vi.spyOn(cache, "set");
+
+    const provider = () => cache;
 
     function Page() {
       const { cache, mutate } = useSWRConfig();
@@ -123,13 +126,9 @@ describe("", () => {
     }
 
     expect(count).toBe(0);
-    await client.query.users.getUser();
-    // make sure deduping does not explain the result
-    await sleep(100);
-    expect(count).toBe(1);
-    renderWithConfig(<Page />);
+    renderWithConfig(<Page />, { provider });
     await screen.findByText("data:foo");
     expect(count).toBe(1);
+    expect(spy).toHaveBeenCalled();
   });
-  */
 });
