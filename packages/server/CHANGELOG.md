@@ -1,5 +1,11 @@
 # @nanorpc/server
 
+## 0.0.5
+
+### Patch Changes
+
+- 3d83ef2: Add support for Next.js App Router
+
 ## 0.0.4
 
 ### Patch Changes
