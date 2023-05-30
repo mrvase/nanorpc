@@ -25,7 +25,7 @@ export const createAPIRoute = <T extends Router>(
     const { status, data } = await handleRequest(router, {
       method: req.method as "GET" | "POST" | "OPTIONS",
       url: req.url!,
-      route: options.route ?? (route as string[]),
+      route: [...(options.route ?? []), ...((route as string[]) ?? [])],
       body,
       context: options.createContext?.({ request: req, response: res }) ?? {},
     });
@@ -61,7 +61,7 @@ export const createRouteHandler = <T extends Router>(
       const { status, data } = await handleRequest(router, {
         method: req.method as "GET" | "POST" | "OPTIONS",
         url: req.url!,
-        route: options.route ?? (route as string[]),
+        route: [...(options.route ?? []), ...((route as string[]) ?? [])],
         body,
         context: options.createContext?.({ request: req, response }) ?? {},
       });
