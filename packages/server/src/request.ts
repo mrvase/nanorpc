@@ -1,12 +1,15 @@
-import qs from "qs";
 import type { InternalProcedureOptions, Procedure, Router } from ".";
 import { getUnknownErrorMessage, modifyTypes } from "./utils";
 import { RPCError } from "./error";
 
 const getInputFromUrl = (url: string | undefined) => {
-  const query = (url ?? "").split("?")[1] ?? "";
-  const parsedQuery = qs.parse(query);
-  return parsedQuery as { input: any; ctx: any };
+  const query = (url ?? "").split("?")[1];
+  if (!query) return { input: undefined };
+  const params = new URLSearchParams(query);
+  const parsedQuery = {
+    input: JSON.parse(decodeURIComponent(params.get("input")!)),
+  };
+  return parsedQuery;
 };
 
 const getInput = (req: { method: string; url: string; body?: any }) => {
@@ -72,6 +75,7 @@ export async function handleRequest<T extends Router>(
   const options: InternalProcedureOptions = {
     onlyMiddleware: method === "OPTIONS",
     throwOnError: true,
+    ...({ input } as any),
   };
 
   try {

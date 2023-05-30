@@ -213,6 +213,7 @@ const cloneState = <TType extends "query" | "mutate">(
   return {
     ...state,
     middlewares: [...state.middlewares],
+    schemas: [...state.schemas],
   };
 };
 

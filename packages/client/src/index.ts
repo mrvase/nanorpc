@@ -1,5 +1,4 @@
 import { ErrorCodes } from "@nanorpc/server";
-import qs from "qs";
 
 type Prettify<T> = { [Key in keyof T]: T[Key] } & {};
 
@@ -127,7 +126,7 @@ export const createClient = <TRouter extends Record<string, any>>(
 
     const createProxy = (type: "query" | "mutate", path: string): any => {
       const getKey = (input: any) => {
-        return [`${url}${path}`, qs.stringify({ input })].filter(Boolean).join("?");
+        return [`${url}${path}`, input ? `input=${encodeURIComponent(JSON.stringify(input))}` : null].filter(Boolean).join("?");
       };
 
       const func = (input: any, options: any) => {
@@ -148,7 +147,7 @@ export const createClient = <TRouter extends Record<string, any>>(
             if (suspended) {
               resolve(null);
             } else {
-              fetcher(getKey(isPost ? {} : input), {
+              fetcher(getKey(isPost ? undefined : input), {
                 method: isPost ? "POST" : "GET",
                 ...(isPost && { body: JSON.stringify({ input }) }),
                 ...globalOptions,

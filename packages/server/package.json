@@ -20,17 +20,14 @@
   "devDependencies": {
     "@nanorpc/eslint-config": "0.0.0",
     "@nanorpc/tsconfig": "0.0.0",
-    "@types/qs": "^6.9.7",
     "eslint": "^7.32.0",
     "next": "13.4.2",
-    "qs": "^6.11.0",
     "tsup": "^6.7.0",
     "typescript": "^5.0.4",
     "vitest": "^0.31.1",
     "zod": "^3.21.4"
   },
   "peerDependencies": {
-    "qs": "^6.11.0",
     "zod": "^3.21.4"
   },
   "publishConfig": {
@@ -51,7 +48,7 @@
   },
   "typesVersions": {
     "*": {
-      "*": [
+      ".": [
         "dist/index.d.ts"
       ],
       "adapters/next": [

@@ -4,11 +4,12 @@ import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import { cache, mutate } from "swr/_internal";
 import type { ErrorCodes, UnpackErrorCodes } from "@nanorpc/server";
-import qs from "qs";
 
 const getInput = <TInput>(key: string) => {
-  const searchParams = key.split("?")[1] ?? "";
-  return qs.parse(searchParams).input as TInput;
+  const paramsString = key.split("?")[1];
+  if (!paramsString) return undefined;
+  const searchParams = new URLSearchParams(paramsString);
+  return JSON.parse(decodeURIComponent(searchParams.get("input")!)) as TInput;
 };
 
 type InferErrorCode<TProcedure> = TProcedure extends (
@@ -47,6 +48,11 @@ export function useQuery<
     [procedure]
   );
 
+  const swrHookResult = useSWR<
+    Exclude<Awaited<TResult>, ErrorCodes<string>>,
+    ErrorCode
+  >(key, fetcher);
+
   const query = React.useCallback(
     async (input?: Input) => {
       if (!input) {
@@ -61,15 +67,9 @@ export function useQuery<
     [procedure]
   );
 
-  const swr = Object.assign(
-    useSWR<Exclude<Awaited<TResult>, ErrorCodes<string>>, ErrorCode>(
-      key,
-      fetcher
-    ),
-    {
-      query,
-    }
-  );
+  const swr = Object.assign(swrHookResult, {
+    query,
+  });
 
   return swr as {
     [Key in keyof typeof swr as Key extends "mutate"
