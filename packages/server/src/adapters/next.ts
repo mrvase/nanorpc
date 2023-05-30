@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import type { NextApiRequest, NextApiResponse } from "next";
 import type { Router, CreateContext } from "..";
 import { handleRequest } from "../request";
-export type { NextRequest, NextResponse, NextApiRequest, NextApiResponse };
+export type { NextRequest, NextApiRequest, NextApiResponse };
 
 export const createAPIRoute = <T extends Router>(
   router: T,
@@ -14,15 +14,21 @@ export const createAPIRoute = <T extends Router>(
   return async (req: NextApiRequest, res: NextApiResponse) => {
     const { route } = req.query;
 
-    const response = await handleRequest(router, {
+    let body = undefined;
+
+    if (req.method === "POST") {
+      try {
+        body = JSON.parse(req.body);
+      } catch (err) {}
+    }
+
+    const { status, data } = await handleRequest(router, {
       method: req.method as "GET" | "POST" | "OPTIONS",
       url: req.url!,
       route: options.route ?? (route as string[]),
-      body: req.body ? JSON.parse(req.body) : undefined,
+      body,
       context: options.createContext?.({ request: req, response: res }) ?? {},
     });
-
-    const { status, data } = response;
 
     res.status(status ?? 200).json(data);
 
@@ -30,17 +36,19 @@ export const createAPIRoute = <T extends Router>(
   };
 };
 
-/*
 export const createRouteHandler = <T extends Router>(
   router: T,
-  routeFromArg?: string[]
+  options: {
+    route?: string[];
+    createContext?: CreateContext<NextRequest, Response>;
+  }
 ) => {
   const createEndpoint =
     (method: "GET" | "POST" | "OPTIONS") =>
     async (req: NextRequest, context: { params: Record<string, string[]> }) => {
       const { route } = context?.params ?? {};
 
-      let body;
+      let body = undefined;
 
       if (method === "POST") {
         try {
@@ -48,28 +56,20 @@ export const createRouteHandler = <T extends Router>(
         } catch (err) {}
       }
 
-      const request: RPCRequest & { body?: any } = {
-        method,
-        url: req.url,
-        headers: req.headers,
-        route: routeFromArg ?? route,
+      const response = new Response();
+
+      const { status, data } = await handleRequest(router, {
+        method: req.method as "GET" | "POST" | "OPTIONS",
+        url: req.url!,
+        route: options.route ?? (route as string[]),
         body,
-      };
+        context: options.createContext?.({ request: req, response }) ?? {},
+      });
 
-      const {
-        init: { redirect, ...init },
-        data,
-      } = await handleRequest(request, router);
-
-      if (typeof redirect === "string") {
-        return NextResponse.redirect(redirect, init);
-      }
-
-      if (!data) {
-        return new Response(null, init);
-      }
-
-      return NextResponse.json(data, init);
+      return new Response(JSON.stringify(data) ?? null, {
+        status,
+        headers: response.headers,
+      });
     };
 
   return {
@@ -78,4 +78,3 @@ export const createRouteHandler = <T extends Router>(
     OPTIONS: createEndpoint("OPTIONS"),
   };
 };
-*/
