@@ -2,7 +2,7 @@ import React from "react";
 import { Fetcher, MUTATE, Options } from ".";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
-import { cache, mutate } from "swr/_internal";
+import { SWRConfiguration, cache, mutate } from "swr/_internal";
 import type { ErrorCodes, UnpackErrorCodes } from "@nanorpc/server";
 
 const getInput = <TInput>(key: string) => {
@@ -23,7 +23,7 @@ export function useQuery<
   TResult extends
     | (Promise<any> & { suspend: () => [any, any, any] })
     | undefined
->(promise: TResult) {
+>(promise: TResult, SWROptions?: SWRConfiguration) {
   type Input = TResult extends { suspend: any }
     ? TResult["suspend"] extends () => [infer Input, any, any]
       ? Input
@@ -51,7 +51,7 @@ export function useQuery<
   const swrHookResult = useSWR<
     Exclude<Awaited<TResult>, ErrorCodes<string>>,
     ErrorCode
-  >(key, fetcher);
+  >(key, fetcher, SWROptions);
 
   const query = React.useCallback(
     async (input?: Input) => {
@@ -76,6 +76,19 @@ export function useQuery<
       ? never
       : Key]: typeof swr[Key];
   } & {}; // basically an omit of "mutate", but this makes the output type pretty
+}
+
+export function useImmutableQuery<
+  TResult extends
+    | (Promise<any> & { suspend: () => [any, any, any] })
+    | undefined
+>(promise: TResult, SWROptions?: SWRConfiguration) {
+  return useQuery(promise, {
+    ...SWROptions,
+    revalidateOnFocus: false,
+    revalidateIfStale: false,
+    revalidateOnReconnect: false,
+  });
 }
 
 function SWRDedupeMiddleware<TOptions extends Options>(
