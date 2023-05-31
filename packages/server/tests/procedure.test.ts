@@ -32,6 +32,33 @@ it("makes middleware context accessible to antecedent functions", async () => {
       return ctx;
     });
 
-  // @ts-expect-error: missing auth
+  // @ts-expect-error
   expect(await p1()).toMatchObject({ auth: true });
+});
+
+it("only calls the same middleware function once", async () => {
+  let procedureWithMiddleware = createProcedure().middleware((i, c, n) => {
+    return n(i, {
+      ...c,
+      count: ((c as any).count ?? 0) + 1,
+    });
+  });
+
+  // it begins with the middleware: +1
+  let p1 = procedureWithMiddleware
+    // it uses the same middlware: +0
+    .use(procedureWithMiddleware)
+    // but it then does the same in another function: +1
+    .middleware((i, c, n) => {
+      return n(i, {
+        ...c,
+        count: c.count + 1,
+      });
+    })
+    .query(async (_, ctx) => {
+      return ctx.count;
+    });
+
+  // @ts-expect-error
+  expect(await p1()).toMatchObject(2);
 });

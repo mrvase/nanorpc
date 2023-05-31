@@ -187,19 +187,19 @@ type ProcedureBuilder<
 
 type ProcedureState<TType extends "query" | "mutate"> = {
   main: QueryFunc<any, any> | MutateFunc<any, any>;
-  schemas: SchemaFunc<any>[];
-  middlewares: MiddlewareFunc<any, any>[];
+  schemas: Set<SchemaFunc<any>>;
+  middlewares: Set<MiddlewareFunc<any, any>>;
   type: TType;
   error: ErrorCode;
 };
 
 const cloneState = <TType extends "query" | "mutate">(
   state: ProcedureState<TType>
-) => {
+): ProcedureState<TType> => {
   return {
     ...state,
-    middlewares: [...state.middlewares],
-    schemas: [...state.schemas],
+    middlewares: new Set(state.middlewares),
+    schemas: new Set(state.schemas),
   };
 };
 
@@ -221,11 +221,11 @@ const createProcedureFromState = <
     async (
       ...args: Parameters<Procedure<TType, TInput, TContext, TOutput, TError>>
     ): Promise<TOutput | ErrorCodes<TError>> => {
-      let [input, context] = args;
+      let [input, context = {}] = args;
       const options = ((args as any)[2] ?? {}) as InternalProcedureOptions;
 
       try {
-        for (let schema of state.schemas) {
+        for (let schema of state.schemas.values()) {
           if (typeof schema === "function") {
             input = schema(input) as any;
             if (input instanceof RPCError) {
@@ -259,8 +259,9 @@ const createProcedureFromState = <
         }
 
         let i = 0;
+        const middlewares = [...state.middlewares.values()];
         const next = async (input: any, context: any) => {
-          const mdlw = state.middlewares[i++];
+          const mdlw = middlewares[i++];
 
           const result: unknown = await (mdlw
             ? mdlw(input, context, next)
@@ -286,6 +287,7 @@ const createProcedureFromState = <
             error: err.error,
           } as ErrorCodes<TError>;
         }
+        console.error("UNKNOWN ERROR:", err);
         return {
           error: "SERVER_ERROR",
         } as ErrorCodes<TError>;
@@ -315,7 +317,7 @@ const createBuilderFromState = <
 
   function middleware<F extends MiddlewareFunc<TInput, TContext>>(f: F) {
     const newState = cloneState(state);
-    newState.middlewares.push(f);
+    newState.middlewares.add(f);
 
     type Result = ReturnType<F> extends Promise<
       Awaited<Next<infer NextInput, infer NextContext>> | RPCError
@@ -334,7 +336,7 @@ const createBuilderFromState = <
 
   function schema<F extends SchemaFunc<TInput>>(f: F) {
     const newState = cloneState(state);
-    newState.schemas.push(f);
+    newState.schemas.add(f);
 
     return createBuilderFromState<
       TType,
@@ -412,8 +414,10 @@ const createBuilderFromState = <
     : never {
     const newState = cloneState(state);
     const usedState = f.state();
-    newState.schemas.push(...usedState.schemas);
-    newState.middlewares.push(...usedState.middlewares);
+    usedState.schemas.forEach((newSchema) => newState.schemas.add(newSchema));
+    usedState.middlewares.forEach((newMiddleware) =>
+      newState.middlewares.add(newMiddleware)
+    );
 
     return createBuilderFromState<
       TType,
@@ -437,8 +441,8 @@ export const createProcedure = <
   const initialState: ProcedureState<"query"> = {
     type: "query",
     main: () => {},
-    schemas: [],
-    middlewares: [] as MiddlewareFunc<any, any>[],
+    schemas: new Set(),
+    middlewares: new Set(),
     error: "",
   };
 
