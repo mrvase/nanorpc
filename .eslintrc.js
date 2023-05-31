@@ -3,7 +3,7 @@ module.exports = {
   extends: ["@nanorpc/eslint-config"],
   settings: {
     next: {
-      rootDir: ["examples/nextjs/"],
+      rootDir: ["example/nextjs/"],
     },
   },
 };

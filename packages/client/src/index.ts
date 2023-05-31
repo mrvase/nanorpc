@@ -100,6 +100,21 @@ export function withMiddleware<
   );
 }
 
+export type CreateClient<TRouter extends Record<string, any>, TFetcher extends Fetcher<any>> = {
+  query: Prettify<
+    TurnIntoQueries<
+      TRouter,
+      TFetcher extends Fetcher<infer TOptions> ? Partial<TOptions> : never
+    >
+  >;
+  mutate: Prettify<
+    TurnIntoMutations<
+      TRouter,
+      TFetcher extends Fetcher<infer TOptions> ? Partial<TOptions> : never
+    >
+  >;
+}
+
 export const createClient = <TRouter extends Record<string, any>>(
   url: string
   ) => {
@@ -108,20 +123,7 @@ export const createClient = <TRouter extends Record<string, any>>(
     globalOptions?: TFetcher extends Fetcher<infer TOptions>
       ? Partial<TOptions>
       : Partial<Options>
-  ): {
-    query: Prettify<
-      TurnIntoQueries<
-        TRouter,
-        TFetcher extends Fetcher<infer TOptions> ? Partial<TOptions> : never
-      >
-    >;
-    mutate: Prettify<
-      TurnIntoMutations<
-        TRouter,
-        TFetcher extends Fetcher<infer TOptions> ? Partial<TOptions> : never
-      >
-    >;
-  } => {
+  ): CreateClient<TRouter, TFetcher> => {
     const PROXY_CACHE: Record<string, any> = {};
 
     const createProxy = (type: "query" | "mutate", path: string): any => {

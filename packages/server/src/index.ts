@@ -1,22 +1,10 @@
 import { z, ZodType } from "zod";
 import { getUnknownErrorMessage } from "./utils";
 import { RPCError } from "./error";
-type Prettify<T> = T extends object ? { [Key in keyof T]: T[Key] } & {} : T;
-
-export type RPCRequest = {
-  method: "GET" | "POST" | "OPTIONS" | undefined;
-  url: string;
-  headers: Headers;
-  route: string[];
-};
-
-export type RPCResponse = {
-  headers: Headers;
-  status: number;
-  redirect?: string;
-};
 
 export { RPCError } from "./error";
+
+type Prettify<T> = T extends object ? { [Key in keyof T]: T[Key] } & {} : T;
 
 type ErrorCode<T extends string = string> = T;
 
@@ -28,23 +16,23 @@ type Next<TInput, TContext> = Promise<{
 
 type MiddlewareFunc<TInput, TContext> = (
   input: TInput,
-  ctx: Prettify<TContext>,
+  ctx: TContext,
   next: <NextInput, NextContext>(
     input: NextInput,
     context: NextContext
-  ) => Next<NextInput, Prettify<TContext & NextContext>>
+  ) => Next<NextInput, TContext & NextContext>
 ) => Promise<Awaited<ReturnType<typeof next>> | RPCError>;
 
 type SchemaFunc<TInput> = ZodType | ((input: TInput) => unknown);
 
 type QueryFunc<TInput, TContext> = (
   input: TInput,
-  ctx: Prettify<TContext>
+  ctx: TContext
 ) => unknown | Promise<unknown>;
 
 type MutateFunc<TInput, TContext> = (
   input: TInput,
-  ctx: Prettify<TContext>
+  ctx: TContext
 ) => unknown | Promise<unknown>;
 
 declare const isError: unique symbol;
@@ -67,8 +55,8 @@ export type Procedure<
   ...args: keyof TContext extends never
     ? TInput extends undefined
       ? []
-      : [input: TInput]
-    : [input: TInput, context: TContext]
+      : [input: Prettify<TInput>]
+    : [input: Prettify<TInput>, context: Prettify<TContext>]
 ) => Promise<TOutput | ErrorCodes<TError>>) & { __type: TType };
 
 /* an instance of Procedure */
@@ -117,14 +105,12 @@ type ProcedureBuilder<
     f: F
   ) => ProcedureBuilder<
     TType,
-    Prettify<
-      TInput &
-        (F extends ZodType
-          ? z.infer<F>
-          : F extends (input: TInput) => infer Result
-          ? Exclude<Result, RPCError>
-          : {})
-    >,
+    TInput &
+      (F extends ZodType
+        ? z.infer<F>
+        : F extends (input: TInput) => infer Result
+        ? Exclude<Result, RPCError>
+        : {}),
     TContext,
     TOutput,
     TError | (F extends () => infer Result ? Extract<Result, RPCError> : never)
@@ -191,7 +177,7 @@ type ProcedureBuilder<
     ? ProcedureBuilder<
         TType & UType,
         UInput & TInput,
-        Prettify<TContext & UContext>,
+        TContext & UContext,
         TOutput,
         TError | UError
       >
@@ -352,14 +338,12 @@ const createBuilderFromState = <
 
     return createBuilderFromState<
       TType,
-      Prettify<
-        TInput &
-          (F extends ZodType
-            ? z.infer<F>
-            : F extends (input: TInput) => infer Result
-            ? Exclude<Result, RPCError>
-            : {})
-      >,
+      TInput &
+        (F extends ZodType
+          ? z.infer<F>
+          : F extends (input: TInput) => infer Result
+          ? Exclude<Result, RPCError>
+          : {}),
       TContext,
       TOutput,
       | TError
@@ -421,7 +405,7 @@ const createBuilderFromState = <
     ? ProcedureBuilder<
         TType & UType,
         UInput & TInput,
-        Prettify<TContext & UContext>,
+        TContext & UContext,
         TOutput,
         TError | UError
       >
@@ -445,10 +429,10 @@ export const createProcedure = <
   TContext extends Record<string, any> | CreateContext = {}
 >() => {
   type InitialContext = TContext extends (...args: any[]) => infer Context
-    ? Prettify<Partial<Awaited<Context>>>
+    ? Partial<Awaited<Context>>
     : TContext extends Promise<object>
-    ? Prettify<Partial<Awaited<TContext>>>
-    : Prettify<Partial<TContext>>;
+    ? Partial<Awaited<TContext>>
+    : Partial<TContext>;
 
   const initialState: ProcedureState<"query"> = {
     type: "query",
