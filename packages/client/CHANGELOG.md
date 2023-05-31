@@ -1,5 +1,12 @@
 # @nanorpc/client
 
+## 0.0.7
+
+### Patch Changes
+
+- 8d1f3c2: Add support for SWR hook options and useSWRImmutable
+- 5325523: Expose "key" method on a query promise that gives the cache key
+
 ## 0.0.6
 
 ## 0.0.5
