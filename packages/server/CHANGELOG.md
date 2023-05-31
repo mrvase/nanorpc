@@ -1,5 +1,12 @@
 # @nanorpc/server
 
+## 0.0.6
+
+### Patch Changes
+
+- 509844f: Accumulate middlewares and schemas with sets so that when the same middleware is used again (e.g. if two pieces of middleware are used, but they are also both made on top of the same piece of middleware), then the function is only called once
+- f242853: Support combination of static and dynamic route
+
 ## 0.0.5
 
 ### Patch Changes
