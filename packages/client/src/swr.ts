@@ -1,5 +1,5 @@
 import React from "react";
-import { Fetcher, MUTATE, Options, withMiddleware } from ".";
+import { Fetcher, MUTATE, Options } from ".";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import { cache, mutate } from "swr/_internal";
@@ -130,12 +130,11 @@ export const createSWRMiddleware = (options?: {
   mutate: typeof mutate;
 }) => {
   return <TOptions extends Options>(fetcher: Fetcher<TOptions>) => {
-    return withMiddleware(fetcher, [
-      SWRDedupeMiddleware,
-      createSWRCacheMiddleware(options),
-    ]);
+    return SWRDedupeMiddleware(createSWRCacheMiddleware(options)(fetcher));
   };
 };
+
+export const SWRMiddleware = createSWRMiddleware();
 
 type InferInput<TProcedure> = TProcedure extends (
   input: infer Input,

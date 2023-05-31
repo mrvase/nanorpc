@@ -15,7 +15,7 @@ type InferResult<TProcedure> = TProcedure extends (
   ? Result
   : never;
 
-type Suspend<T> = { suspend: () => [T, any, any] };
+type Suspend<T> = { key: () => string, suspend: () => [T, any, any] };
 
 export type QUERY<T extends (...args: any) => any> = ((
   ...args: InferArgs<T>
@@ -116,14 +116,14 @@ export type CreateClient<TRouter extends Record<string, any>, TFetcher extends F
 }
 
 export const createClient = <TRouter extends Record<string, any>>(
-  url: string
+  url: string = ""
   ) => {
   return <TFetcher extends Fetcher<any>>(
     fetcher: TFetcher,
     globalOptions?: TFetcher extends Fetcher<infer TOptions>
       ? Partial<TOptions>
       : Partial<Options>
-  ): CreateClient<TRouter, TFetcher> => {
+  ): Prettify<CreateClient<TRouter, TFetcher>> => {
     const PROXY_CACHE: Record<string, any> = {};
 
     const createProxy = (type: "query" | "mutate", path: string): any => {
@@ -139,6 +139,10 @@ export const createClient = <TRouter extends Record<string, any>>(
           suspended = true;
           return [input, options, proxy];
         };
+        let key = () => {
+          suspended = true;
+          return getKey(isPost ? undefined : input)
+        }
 
         const throwOnError = options?.swr === true;
 
@@ -171,7 +175,7 @@ export const createClient = <TRouter extends Record<string, any>>(
           });
         });
 
-        return Object.assign(promise, { suspend });
+        return Object.assign(promise, { suspend, key });
       };
 
       const proxy = new Proxy(func, {
