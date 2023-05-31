@@ -36,7 +36,7 @@ importers:
   packages/client:
     specifiers:
       '@nanorpc/eslint-config': 0.0.0
-      '@nanorpc/server': 0.0.5
+      '@nanorpc/server': 0.0.6
       '@nanorpc/tsconfig': 0.0.0
       '@testing-library/jest-dom': ^5.16.5
       '@testing-library/react': ^14.0.0
