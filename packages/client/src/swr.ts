@@ -2,7 +2,7 @@ import React from "react";
 import { Fetcher, MUTATE, Options } from ".";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
-import { SWRConfiguration, cache, mutate } from "swr/_internal";
+import { SWRConfiguration, cache as globalCache, mutate } from "swr/_internal";
 import type { ErrorCodes, UnpackErrorCodes } from "@nanorpc/server";
 
 const getInput = <TInput>(key: string) => {
@@ -109,13 +109,50 @@ function SWRDedupeMiddleware<TOptions extends Options>(
   };
 }
 
-const createSWRCacheMiddleware = (
-  middlewareOptions: {
-    cache: typeof cache;
+export const createCacheAccess = (
+  options: {
+    cache: typeof globalCache;
     mutate: typeof mutate;
-  } = { cache, mutate }
+  } = { cache: globalCache, mutate }
 ) => {
-  const { cache, mutate } = middlewareOptions;
+  const { cache, mutate } = options;
+  return {
+    set: <
+      TResult extends Promise<any> & {
+        key: () => string;
+      }
+    >(
+      promise: TResult,
+      data: Exclude<Awaited<TResult>, ErrorCodes<string>>
+    ) => {
+      const key = promise.key();
+      mutate(key, data);
+    },
+    read: <
+      TResult extends Promise<any> & {
+        key: () => string;
+      }
+    >(
+      promise: TResult
+    ) => {
+      const key = promise.key();
+      const cached = cache.get(key);
+      if (cached) {
+        return cached.data as Exclude<Awaited<TResult>, ErrorCodes<string>>;
+      }
+    },
+  };
+};
+
+export const cache = createCacheAccess();
+
+const createSWRCacheMiddleware = (
+  options: {
+    cache: typeof globalCache;
+    mutate: typeof mutate;
+  } = { cache: globalCache, mutate }
+) => {
+  const { cache, mutate } = options;
   return <TOptions extends Options>(fetcher: Fetcher<TOptions>) => {
     return async (
       key: string,
@@ -139,7 +176,7 @@ const createSWRCacheMiddleware = (
 };
 
 export const createSWRMiddleware = (options?: {
-  cache: typeof cache;
+  cache: typeof globalCache;
   mutate: typeof mutate;
 }) => {
   return <TOptions extends Options>(fetcher: Fetcher<TOptions>) => {
