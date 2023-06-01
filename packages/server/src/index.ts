@@ -35,10 +35,10 @@ type MutateFunc<TInput, TContext> = (
   ctx: TContext
 ) => unknown | Promise<unknown>;
 
-declare const isError: unique symbol;
+declare const is_error: unique symbol;
 
 export type ErrorCodes<T extends ErrorCode> = {
-  [isError]: true;
+  [is_error]: true;
   error: T;
 };
 
@@ -453,4 +453,8 @@ export const createProcedure = <
     unknown,
     "SERVER_ERROR" | "NOT_FOUND"
   >(initialState);
+};
+
+export const isError = (value: unknown): value is ErrorCodes<string> => {
+  return value !== null && typeof value === "object" && "error" in value;
 };
