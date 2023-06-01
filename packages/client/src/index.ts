@@ -30,6 +30,11 @@ type ClientParams<
   ? [input?: T[0], options?: TOptions]
   : [input: T[0], options?: TOptions];
 
+export type Result<TQuery extends (...args: any) => any> = Exclude<
+  Awaited<ReturnType<TQuery>>,
+  ErrorCodes<string>
+>;
+
 type TurnIntoQueries<
   TRouter extends Record<string, any>,
   TOptions extends Partial<Options>
@@ -38,7 +43,7 @@ type TurnIntoQueries<
     ? never
     : Key]: TRouter[Key] extends QUERY_SERVER<infer Func>
     ? QUERY<
-        (...args: ClientParams<Parameters<Func>, TOptions>) => ReturnType<Func>
+        (...args: ClientParams<Parameters<Func>, TOptions & NativeOptions<Result<Func>>>) => ReturnType<Func>
       >
     : TRouter[Key] extends Record<string, any>
     ? Prettify<TurnIntoQueries<TRouter[Key], TOptions>>
@@ -61,10 +66,14 @@ type TurnIntoMutations<
 };
 
 export type Options = {
-  method?: "GET" | "POST";
-  headers?: Record<string, string>;
-  body?: string;
+  method: "GET" | "POST";
+  body: string;
 };
+
+type NativeOptions<TResult> = {
+  onError?: (error: string) => void;
+  onSuccess?: (result: TResult) => void;
+}
 
 export type Fetcher<TOptions> = (
   key: string,
@@ -163,8 +172,10 @@ export const createClient = <TRouter extends Record<string, any>>(
                   if (
                     isError(result)
                   ) {
+                    options?.onError?.(result.error)
                     reject(result.error);
                   } else {
+                    options?.onSuccess?.(result)
                     resolve(result);
                   }
                 })
