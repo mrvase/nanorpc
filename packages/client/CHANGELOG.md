@@ -1,5 +1,12 @@
 # @nanorpc/client
 
+## 0.0.8
+
+### Patch Changes
+
+- b2d21ec: Add typesafe cache access
+- 628b660: Add native onSuccess and onError callbacks
+
 ## 0.0.7
 
 ### Patch Changes
