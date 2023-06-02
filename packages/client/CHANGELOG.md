@@ -1,5 +1,11 @@
 # @nanorpc/client
 
+## 0.0.10
+
+### Patch Changes
+
+- dba209f: Add native onSuccess and onError callbacks to mutations as well as queries
+
 ## 0.0.9
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @nanorpc/server
 
+## 0.0.10
+
+### Patch Changes
+
+- 2dbe65b: Remove context as required procedure argument
+
 ## 0.0.9
 
 ### Patch Changes
