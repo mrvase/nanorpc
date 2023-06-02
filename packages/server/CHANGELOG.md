@@ -1,5 +1,11 @@
 # @nanorpc/server
 
+## 0.0.13
+
+### Patch Changes
+
+- ea27911: Do not run validation if onlyMiddleware option is true
+
 ## 0.0.12
 
 ### Patch Changes
