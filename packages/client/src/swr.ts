@@ -53,10 +53,10 @@ export function useQuery<
     ErrorCode
   >(key, fetcher, SWROptions);
 
-  const query = React.useCallback(
+  const revalidate = React.useCallback(
     async (input?: Input) => {
       if (!input) {
-        return await swr.mutate();
+        return await swrHookResult.mutate();
       } else if (procedure) {
         const key = procedure.__getKey(input);
         const result = await procedure(input, options);
@@ -67,8 +67,14 @@ export function useQuery<
     [procedure]
   );
 
+  const setData = (
+    data: Parameters<typeof swrHookResult.mutate>[0],
+    options?: Parameters<typeof swrHookResult.mutate>[1]
+  ) => swrHookResult.mutate(data, options);
+
   const swr = Object.assign(swrHookResult, {
-    query,
+    revalidate,
+    setData,
   });
 
   return swr as {
