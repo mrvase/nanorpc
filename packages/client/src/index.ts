@@ -46,9 +46,9 @@ type TurnIntoQueries<
         (...args: ClientParams<Parameters<Func>, TOptions & NativeOptions<Result<Func>>>) => ReturnType<Func>
       >
     : TRouter[Key] extends Record<string, any>
-    ? Prettify<TurnIntoQueries<TRouter[Key], TOptions>>
+    ? TurnIntoQueries<TRouter[Key], TOptions>
     : never;
-};
+}  & {};
 
 type TurnIntoMutations<
   TRouter extends Record<string, any>,
@@ -58,12 +58,12 @@ type TurnIntoMutations<
     ? never
     : Key]: TRouter[Key] extends MUTATE<infer Func>
     ? MUTATE<
-        (...args: ClientParams<Parameters<Func>, TOptions>) => ReturnType<Func>
+        (...args: ClientParams<Parameters<Func>, TOptions & NativeOptions<Result<Func>>>) => ReturnType<Func>
       >
     : TRouter[Key] extends Record<string, any>
-    ? Prettify<TurnIntoMutations<TRouter[Key], TOptions>>
+    ? TurnIntoMutations<TRouter[Key], TOptions>
     : never;
-};
+} & {};
 
 export type Options = {
   method: "GET" | "POST";
@@ -109,30 +109,31 @@ export function withMiddleware<
   );
 }
 
-export type CreateClient<TRouter extends Record<string, any>, TFetcher extends Fetcher<any>> = {
-  query: Prettify<
+type CreateClientWithOptions<TRouter extends Record<string, any>, TOptions extends Partial<Options>> = {
+  query: 
     TurnIntoQueries<
       TRouter,
-      TFetcher extends Fetcher<infer TOptions> ? Partial<TOptions> : never
+      TOptions
     >
-  >;
-  mutate: Prettify<
+  ;
+  mutate: 
     TurnIntoMutations<
       TRouter,
-      TFetcher extends Fetcher<infer TOptions> ? Partial<TOptions> : never
-    >
-  >;
-}
+      TOptions
+    >;
+} & {};
+
+type InferFetcherOptions<TFetcher extends Fetcher<any>> = TFetcher extends Fetcher<infer TOptions> ? TOptions : never;
+
+export type CreateClient<TRouter extends Record<string, any>, TFetcher extends Fetcher<any>> = CreateClientWithOptions<TRouter, InferFetcherOptions<TFetcher>> & {};
 
 export const createClient = <TRouter extends Record<string, any>>(
   url: string = ""
   ) => {
   return <TFetcher extends Fetcher<any>>(
     fetcher: TFetcher,
-    globalOptions?: TFetcher extends Fetcher<infer TOptions>
-      ? Partial<TOptions>
-      : Partial<Options>
-  ): Prettify<CreateClient<TRouter, TFetcher>> => {
+    globalOptions?: InferFetcherOptions<TFetcher>
+  ): CreateClient<TRouter, TFetcher> => {
     const PROXY_CACHE: Record<string, any> = {};
 
     const createProxy = (type: "query" | "mutate", path: string): any => {

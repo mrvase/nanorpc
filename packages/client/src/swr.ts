@@ -1,7 +1,7 @@
 import React from "react";
 import { Fetcher, MUTATE, Options } from ".";
 import useSWR from "swr";
-import useSWRMutation from "swr/mutation";
+import useSWRMutation, { SWRMutationConfiguration } from "swr/mutation";
 import { SWRConfiguration, cache as globalCache, mutate } from "swr/_internal";
 import type { ErrorCodes, UnpackErrorCodes } from "@nanorpc/server";
 
@@ -129,7 +129,9 @@ export const createCacheAccess = (
       }
     >(
       promise: TResult,
-      data: Exclude<Awaited<TResult>, ErrorCodes<string>>
+      data: Parameters<
+        typeof mutate<Exclude<Awaited<TResult>, ErrorCodes<string>>>
+      >[1]
     ) => {
       const key = promise.key();
       mutate(key, data);
@@ -144,7 +146,9 @@ export const createCacheAccess = (
       const key = promise.key();
       const cached = cache.get(key);
       if (cached) {
-        return cached.data as Exclude<Awaited<TResult>, ErrorCodes<string>>;
+        return cached.data as
+          | Exclude<Awaited<TResult>, ErrorCodes<string>>
+          | undefined;
       }
     },
   };
@@ -219,23 +223,30 @@ export function useMutation<
   TProcedure extends MUTATE<(input: any, options?: any) => any>
 >(
   procedure: TProcedure,
-  options?: InferOptions<TProcedure>
-): ((input: InferInput<TProcedure>) => Promise<InferResult<TProcedure>>) & {
-  data: OnlyData<InferResult<TProcedure>> | undefined;
-  error: InferErrorCode<TProcedure> | undefined;
-  isMutating: boolean;
-} {
+  options?: InferOptions<TProcedure>,
+  SWROptions?: SWRMutationConfiguration<
+    OnlyData<InferResult<TProcedure>>,
+    InferErrorCode<TProcedure>,
+    InferInput<TProcedure>
+  >
+) {
+  type Result = InferResult<TProcedure>;
+
   const fetcher = React.useCallback(
     async (_: string, { arg }: any) => {
       return (await procedure(arg, {
         ...options,
         swr: true,
-      })) as InferResult<TProcedure>;
+      })) as OnlyData<Result>;
     },
     [procedure]
   );
 
-  const swr = useSWRMutation((procedure as any).__getKey({}), fetcher);
+  const swr = useSWRMutation(
+    (procedure as any).__getKey({}),
+    fetcher,
+    SWROptions
+  );
 
   return Object.assign(
     React.useCallback(
@@ -246,13 +257,14 @@ export function useMutation<
         } catch (err) {
           result = err;
         }
-        return result as InferResult<TProcedure>;
+        return result as Result;
       },
       [procedure, swr.trigger]
     ),
     {
+      reset: swr.reset,
       get data() {
-        return swr.data as OnlyData<InferResult<TProcedure>> | undefined;
+        return swr.data as OnlyData<Result> | undefined;
       },
       get error() {
         return swr.error as InferErrorCode<TProcedure> | undefined;
