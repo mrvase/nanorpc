@@ -1,5 +1,11 @@
 # @nanorpc/client
 
+## 0.0.12
+
+### Patch Changes
+
+- 58e0c4d: Handle input correctly on OPTIONS request
+
 ## 0.0.11
 
 ### Patch Changes
