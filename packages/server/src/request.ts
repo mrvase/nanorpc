@@ -92,7 +92,7 @@ export async function handleRequest<T extends Router>(
         status: err.status || 500,
       };
     }
-    console.error(getUnknownErrorMessage(err));
+    console.error("UNKNOWN RPC ERROR [2]:", err);
     return {
       data: { error: "SERVER_ERROR" },
       status: 500,

@@ -230,27 +230,28 @@ const createProcedureFromState = <
       const options = ((args as any)[2] ?? {}) as InternalProcedureOptions;
 
       try {
-        for (let schema of state.schemas.values()) {
-          if (typeof schema === "function") {
-            input = schema(input) as any;
-            if (input instanceof RPCError) {
-              throw input;
-            }
-          }
-          if (schema instanceof ZodType) {
+        if (!options.onlyMiddleware) {
+          for (let schema of state.schemas.values()) {
             try {
-              schema.parse(input);
-            } catch (e) {
+              if (typeof schema === "function") {
+                input = schema(input) as any;
+              } else if (schema instanceof ZodType) {
+                schema.parse(input);
+              }
+            } catch (err) {
+              console.error("VALIDATION ERROR:", err);
               throw new RPCError({
                 code: "SERVER_ERROR",
                 status: 500,
-                message: getUnknownErrorMessage(e),
+                message: getUnknownErrorMessage(err),
               });
+            }
+            if (input instanceof RPCError) {
+              console.error("VALIDATION ERROR:", input);
+              throw input;
             }
           }
         }
-
-        const main = options.onlyMiddleware ? async () => {} : state.main;
 
         class MiddlewareResult {
           data: any;
@@ -265,6 +266,7 @@ const createProcedureFromState = <
 
         let i = 0;
         const middlewares = [...state.middlewares.values()];
+        const main = options.onlyMiddleware ? async () => {} : state.main;
         const next = async (input: any, context: any) => {
           const mdlw = middlewares[i++];
 
@@ -292,7 +294,7 @@ const createProcedureFromState = <
             error: err.error,
           } as ErrorCodes<TError>;
         }
-        console.error("UNKNOWN ERROR:", err);
+        console.error("UNKNOWN RPC ERROR [1]:", err);
         return {
           error: "SERVER_ERROR",
         } as ErrorCodes<TError>;
