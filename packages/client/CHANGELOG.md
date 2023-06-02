@@ -1,5 +1,11 @@
 # @nanorpc/client
 
+## 0.0.11
+
+### Patch Changes
+
+- 34510c4: Add input as parameter on native callbacks
+
 ## 0.0.10
 
 ### Patch Changes
