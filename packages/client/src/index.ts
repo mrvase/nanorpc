@@ -43,7 +43,7 @@ type TurnIntoQueries<
     ? never
     : Key]: TRouter[Key] extends QUERY_SERVER<infer Func>
     ? QUERY<
-        (...args: ClientParams<Parameters<Func>, TOptions & NativeOptions<Result<Func>>>) => ReturnType<Func>
+        (...args: ClientParams<Parameters<Func>, TOptions & NativeOptions<Result<Func>, Parameters<Func>[0]>>) => ReturnType<Func>
       >
     : TRouter[Key] extends Record<string, any>
     ? TurnIntoQueries<TRouter[Key], TOptions>
@@ -58,7 +58,7 @@ type TurnIntoMutations<
     ? never
     : Key]: TRouter[Key] extends MUTATE<infer Func>
     ? MUTATE<
-        (...args: ClientParams<Parameters<Func>, TOptions & NativeOptions<Result<Func>>>) => ReturnType<Func>
+        (...args: ClientParams<Parameters<Func>, TOptions & NativeOptions<Result<Func>, Parameters<Func>[0]>>) => ReturnType<Func>
       >
     : TRouter[Key] extends Record<string, any>
     ? TurnIntoMutations<TRouter[Key], TOptions>
@@ -70,9 +70,9 @@ export type Options = {
   body: string;
 };
 
-type NativeOptions<TResult> = {
-  onError?: (error: string) => void;
-  onSuccess?: (result: TResult) => void;
+type NativeOptions<TResult, TInput> = {
+  onError?: (error: string, input: TInput) => void;
+  onSuccess?: (result: TResult, input: TInput) => void;
 }
 
 export type Fetcher<TOptions> = (
@@ -123,7 +123,7 @@ type CreateClientWithOptions<TRouter extends Record<string, any>, TOptions exten
     >;
 } & {};
 
-type InferFetcherOptions<TFetcher extends Fetcher<any>> = TFetcher extends Fetcher<infer TOptions> ? TOptions : never;
+type InferFetcherOptions<TFetcher extends Fetcher<any>> = TFetcher extends Fetcher<infer TOptions> ? Partial<TOptions> : never;
 
 export type CreateClient<TRouter extends Record<string, any>, TFetcher extends Fetcher<any>> = CreateClientWithOptions<TRouter, InferFetcherOptions<TFetcher>> & {};
 
@@ -173,10 +173,10 @@ export const createClient = <TRouter extends Record<string, any>>(
                   if (
                     isError(result)
                   ) {
-                    options?.onError?.(result.error)
+                    options?.onError?.(result.error, input)
                     reject(result.error);
                   } else {
-                    options?.onSuccess?.(result)
+                    options?.onSuccess?.(result, input)
                     resolve(result);
                   }
                 })
