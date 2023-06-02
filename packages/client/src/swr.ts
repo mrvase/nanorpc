@@ -64,7 +64,7 @@ export function useQuery<
         return result;
       }
     },
-    [procedure]
+    [swrHookResult.mutate, procedure]
   );
 
   const setData = (

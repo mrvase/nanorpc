@@ -19,7 +19,13 @@ const getInput = (req: { method: string; url: string; body?: any }) => {
   if (req.method === "POST") {
     return {
       ctx: modifyTypes(getInputFromUrl(req.url))?.ctx ?? {},
-      input: req.body?.input ?? {},
+      input: req.body?.input,
+    };
+  }
+  if (req.method === "OPTIONS") {
+    return {
+      ctx: {},
+      input: undefined,
     };
   }
   return undefined;
@@ -75,7 +81,6 @@ export async function handleRequest<T extends Router>(
   const options: InternalProcedureOptions = {
     onlyMiddleware: method === "OPTIONS",
     throwOnError: true,
-    ...({ input } as any),
   };
 
   try {
