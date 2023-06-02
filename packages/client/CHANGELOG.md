@@ -1,5 +1,11 @@
 # @nanorpc/client
 
+## 0.0.9
+
+### Patch Changes
+
+- f40a3f5: Rename "query" method from useQuery to "revalidate" and add setData method - both use SWR's mutate method underneath but separate its dual concern
+
 ## 0.0.8
 
 ### Patch Changes

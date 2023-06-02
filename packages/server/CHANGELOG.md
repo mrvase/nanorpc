@@ -1,5 +1,11 @@
 # @nanorpc/server
 
+## 0.0.9
+
+### Patch Changes
+
+- 0004bb7: Set status to 307 on redirect
+
 ## 0.0.8
 
 ## 0.0.7
