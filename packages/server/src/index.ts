@@ -45,6 +45,15 @@ export type ErrorCodes<T extends ErrorCode> = {
 export type UnpackErrorCodes<T extends ErrorCodes<string>> =
   T extends ErrorCodes<infer E> ? E : never;
 
+/*
+if I need to check for context:
+keyof TContext extends never
+    ? TInput extends undefined
+      ? []
+      : [input: Prettify<TInput>]
+    : [input: Prettify<TInput>, context: Prettify<TContext>]
+*/
+
 export type Procedure<
   TType extends "query" | "mutate",
   TInput,
@@ -52,11 +61,7 @@ export type Procedure<
   TOutput,
   TError extends ErrorCode
 > = ((
-  ...args: keyof TContext extends never
-    ? TInput extends undefined
-      ? []
-      : [input: Prettify<TInput>]
-    : [input: Prettify<TInput>, context: Prettify<TContext>]
+  ...args: TInput extends undefined ? [] : [input: Prettify<TInput>]
 ) => Promise<TOutput | ErrorCodes<TError>>) & { __type: TType };
 
 /* an instance of Procedure */
@@ -79,8 +84,8 @@ type PrettifyProcedure<T> = T extends ((
 
 export type Router = {
   [key: string]:
-    | QUERY<(...args: [input: any, context: any]) => Promise<any>>
-    | MUTATE<(...args: [input: any, context: any]) => Promise<any>>
+    | QUERY<(...args: [input: any]) => Promise<any>>
+    | MUTATE<(...args: [input: any]) => Promise<any>>
     | Router;
 };
 

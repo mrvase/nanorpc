@@ -32,7 +32,6 @@ it("makes middleware context accessible to antecedent functions", async () => {
       return ctx;
     });
 
-  // @ts-expect-error
   expect(await p1()).toMatchObject({ auth: true });
 });
 
@@ -40,7 +39,7 @@ it("only calls the same middleware function once", async () => {
   let procedureWithMiddleware = createProcedure().middleware((i, c, n) => {
     return n(i, {
       ...c,
-      count: ((c as any).count ?? 0) + 1,
+      count: (((c as any).count as number) ?? 0) + 1,
     });
   });
 
@@ -59,6 +58,5 @@ it("only calls the same middleware function once", async () => {
       return ctx.count;
     });
 
-  // @ts-expect-error
   expect(await p1()).toMatchObject(2);
 });
