@@ -60,12 +60,13 @@ describe("", () => {
     const client = createClient<typeof router>("/api")(fetcherWithMiddleware);
 
     expect(count).toBe(0);
-    await Promise.all([
+    const result = await Promise.all([
       client.query.users.getUser(),
       client.query.users.getUser(),
       client.query.users.getUser(),
     ]);
     expect(count).toBe(1);
+    expect(result).toMatchObject(["foo", "foo", "foo"]);
   });
 
   it("makes only a single fetch with deduping", async () => {
@@ -97,6 +98,9 @@ describe("", () => {
     render(<Page />);
     await screen.findByText("data:foo");
     expect(count).toBe(1);
+    const result = await client.query.users.getUser();
+    // check that cache access returns the same result
+    expect(result).toBe("foo");
   });
 
   it("uses local cache when provided", async () => {

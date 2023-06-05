@@ -2,7 +2,12 @@ import React from "react";
 import { Fetcher, MUTATE, Options } from ".";
 import useSWR from "swr";
 import useSWRMutation, { SWRMutationConfiguration } from "swr/mutation";
-import { SWRConfiguration, cache as globalCache, mutate } from "swr/_internal";
+import {
+  SWRConfiguration,
+  State,
+  cache as globalCache,
+  mutate,
+} from "swr/_internal";
 import type { ErrorCodes, UnpackErrorCodes } from "@nanorpc/server";
 
 const getInput = <TInput>(key: string) => {
@@ -115,6 +120,12 @@ function SWRDedupeMiddleware<TOptions extends Options>(
   };
 }
 
+const getCacheData = <TResult>(state: State<any, any> | undefined) => {
+  if (state && state.data && !state.isLoading) {
+    return state.data as Exclude<Awaited<TResult>, ErrorCodes<string>>;
+  }
+};
+
 export const createCacheAccess = (
   options: {
     cache: typeof globalCache;
@@ -144,12 +155,7 @@ export const createCacheAccess = (
       promise: TResult
     ) => {
       const key = promise.key();
-      const cached = cache.get(key);
-      if (cached) {
-        return cached.data as
-          | Exclude<Awaited<TResult>, ErrorCodes<string>>
-          | undefined;
-      }
+      return getCacheData<TResult>(cache.get(key));
     },
   };
 };
@@ -169,10 +175,8 @@ const createSWRCacheMiddleware = (
       options: TOptions & { skipCache?: boolean; swr?: boolean }
     ) => {
       if (options.method === "GET" && !options.swr && !options.skipCache) {
-        let cached = cache.get(key)?.data;
-        if (cached) {
-          return cached?.data;
-        }
+        const cached = getCacheData(cache.get(key));
+        if (cached) return cached;
       }
       const promise = fetcher(key, options);
       if (!options.swr) {
