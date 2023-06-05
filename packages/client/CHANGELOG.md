@@ -1,5 +1,11 @@
 # @nanorpc/client
 
+## 0.0.14
+
+### Patch Changes
+
+- 454fe09: Fix that SWR middleware accesses "data" prop twice on cache entry so that it returns undefined
+
 ## 0.0.13
 
 ## 0.0.12
