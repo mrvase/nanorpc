@@ -7,7 +7,8 @@
   "sideEffects": false,
   "license": "MIT",
   "files": [
-    "dist/**"
+    "dist/**",
+    "swr/**"
   ],
   "scripts": {
     "build": "tsup --entry src/index.ts --entry src/swr.ts --format esm,cjs --minify --dts",
@@ -48,24 +49,16 @@
   "exports": {
     "./package.json": "./package.json",
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./swr": {
+      "types": "./dist/swr.d.ts",
       "import": "./dist/swr.mjs",
       "require": "./dist/swr.js",
       "default": "./dist/swr.js"
-    }
-  },
-  "typesVersions": {
-    "*": {
-      ".": [
-        "dist/index.d.ts"
-      ],
-      "swr": [
-        "dist/swr.d.ts"
-      ]
     }
   }
 }

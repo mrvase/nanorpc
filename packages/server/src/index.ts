@@ -65,12 +65,12 @@ export type Procedure<
 ) => Promise<TOutput | ErrorCodes<TError>>) & { __type: TType };
 
 /* an instance of Procedure */
-type QUERY<T extends (...args: any) => any> = T & {
+export type QUERY<T extends (...args: any) => any> = T & {
   __type: "query";
 };
 
 /* an instance of Procedure */
-type MUTATE<T extends (...args: any) => any> = T & {
+export type MUTATE<T extends (...args: any) => any> = T & {
   __type: "mutate";
 };
 
