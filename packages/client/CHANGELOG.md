@@ -1,5 +1,11 @@
 # @nanorpc/client
 
+## 0.0.16
+
+### Patch Changes
+
+- 5bc52b9: Fix exports from entry points other than main. Now actual files are used instead of the "typesVersions" config
+
 ## 0.0.15
 
 ### Patch Changes
