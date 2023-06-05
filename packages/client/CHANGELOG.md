@@ -1,5 +1,11 @@
 # @nanorpc/client
 
+## 0.0.15
+
+### Patch Changes
+
+- 8a353df: Let entries in dedupe middleware cache stay longer
+
 ## 0.0.14
 
 ### Patch Changes
