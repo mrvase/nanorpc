@@ -105,17 +105,36 @@ export function useImmutableQuery<
 function SWRDedupeMiddleware<TOptions extends Options>(
   fetcher: Fetcher<TOptions>
 ) {
-  const FETCH: Record<string, Promise<any>> = {};
+  const FETCH: Record<
+    string,
+    [
+      timestamp: number,
+      promise: Promise<any> | undefined,
+      data: any | undefined
+    ]
+  > = {};
 
-  return async (key: string, options: TOptions & { skipCache?: boolean }) => {
-    if (options.method !== "GET" || !(key in FETCH)) {
-      FETCH[key] = fetcher(key, options);
+  return async (
+    key: string,
+    options: TOptions & { skipCache?: boolean; swr?: boolean }
+  ) => {
+    if (options.method !== "GET") {
+      return await fetcher(key, options);
     }
-    const result = await FETCH[key];
-    setTimeout(() => {
-      // allow cache to be set and catch anteceding fetches
-      if (key in FETCH) delete FETCH[key];
-    });
+    const now = Date.now();
+    // fetch if it does not exist
+    // or if it is older than 2 seconds (SWR default dedupe interval)
+    if (!(key in FETCH) || now - FETCH[key][0] > 2000 || options.skipCache) {
+      FETCH[key] = [now, fetcher(key, options), undefined];
+    }
+    const result = FETCH[key][2] ?? (await FETCH[key][1]);
+    if (options.swr) {
+      // it will now be handled by SWR cache
+      delete FETCH[key];
+    } else {
+      FETCH[key][2] = result;
+      FETCH[key][1] = undefined;
+    }
     return result;
   };
 }
