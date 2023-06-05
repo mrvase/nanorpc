@@ -89,7 +89,7 @@ export type Router = {
     | Router;
 };
 
-type HTTPContext<
+export type HTTPContext<
   Request extends object = object,
   Response extends object = object
 > = { request: Request; response: Response };
@@ -99,7 +99,7 @@ export type CreateContext<
   Response extends object = object
 > = (context: HTTPContext<Request, Response>) => Record<string, any>;
 
-type ProcedureBuilder<
+export type ProcedureBuilder<
   TType extends "query" | "mutate",
   TInput,
   TContext,
@@ -190,7 +190,7 @@ type ProcedureBuilder<
   state: () => ProcedureState<TType>;
 };
 
-type ProcedureState<TType extends "query" | "mutate"> = {
+export type ProcedureState<TType extends "query" | "mutate"> = {
   main: QueryFunc<any, any> | MutateFunc<any, any>;
   schemas: Set<SchemaFunc<any>>;
   middlewares: Set<MiddlewareFunc<any, any>>;
