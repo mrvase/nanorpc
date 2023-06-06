@@ -1,5 +1,12 @@
 # @nanorpc/server
 
+## 0.0.16
+
+### Patch Changes
+
+- e7e0cf7: Export core types from server package to fix max serialization length error in Typescript. This makes the library compatible with having the "declaration" option set to true in tsconfig
+- 5bc52b9: Fix exports from entry points other than main. Now actual files are used instead of the "typesVersions" config
+
 ## 0.0.15
 
 ## 0.0.14
