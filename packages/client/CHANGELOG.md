@@ -1,5 +1,11 @@
 # @nanorpc/client
 
+## 0.0.18
+
+### Patch Changes
+
+- fba8c1c: Flip SWR middlewares so SWR cache can take over dedupe cache
+
 ## 0.0.17
 
 ### Patch Changes
