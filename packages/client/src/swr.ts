@@ -164,7 +164,7 @@ export const createCacheAccess = (
       >[1]
     ) => {
       const key = promise.key();
-      mutate(key, data);
+      mutate(key, data, { revalidate: false });
     },
     read: <
       TResult extends Promise<any> & {
@@ -198,10 +198,8 @@ const createSWRCacheMiddleware = (
         if (cached) return cached;
       }
       const promise = fetcher(key, options);
-      if (!options.swr) {
-        return await mutate(key, async () => {
-          return await promise;
-        });
+      if (options.method === "GET" && !options.swr) {
+        return await mutate(key, promise, { revalidate: false });
       }
       return await promise;
     };
