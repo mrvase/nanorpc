@@ -1,5 +1,11 @@
 # @nanorpc/client
 
+## 0.0.17
+
+### Patch Changes
+
+- 4290229: Do not revalidate when writing to cache outside hooks
+
 ## 0.0.16
 
 ### Patch Changes
