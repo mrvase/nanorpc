@@ -25,12 +25,12 @@ it("should not fetch when suspend methods are called", async () => {
     return createResponse(fetch(key));
   }
 
-  const client = createClient<typeof router>("/api")(fetcher);
+  const client = createClient<typeof router>()(fetcher);
 
   const promise1 = client.query.users.getUser();
   const key = promise1.key();
 
-  expect(key).toBe("/api/users/getUser");
+  expect(key).toBe("/users/getUser");
   await promise1;
   expect(count).toBe(0);
 

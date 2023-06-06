@@ -211,7 +211,7 @@ export const createSWRMiddleware = (options?: {
   mutate: typeof mutate;
 }) => {
   return <TOptions extends Options>(fetcher: Fetcher<TOptions>) => {
-    return SWRDedupeMiddleware(createSWRCacheMiddleware(options)(fetcher));
+    return createSWRCacheMiddleware(options)(SWRDedupeMiddleware(fetcher));
   };
 };
 

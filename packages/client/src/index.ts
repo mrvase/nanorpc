@@ -128,7 +128,7 @@ type InferFetcherOptions<TFetcher extends Fetcher<any>> = TFetcher extends Fetch
 export type CreateClient<TRouter extends Record<string, any>, TFetcher extends Fetcher<any>> = CreateClientWithOptions<TRouter, InferFetcherOptions<TFetcher>> & {};
 
 export const createClient = <TRouter extends Record<string, any>>(
-  url: string = ""
+  clientOptions: { url?: string } = {}
   ) => {
   return <TFetcher extends Fetcher<any>>(
     fetcher: TFetcher,
@@ -138,7 +138,7 @@ export const createClient = <TRouter extends Record<string, any>>(
 
     const createProxy = (type: "query" | "mutate", path: string): any => {
       const getKey = (input: any) => {
-        return [`${url}${path}`, input ? `input=${encodeURIComponent(JSON.stringify(input))}` : null].filter(Boolean).join("?");
+        return [`${clientOptions.url ?? ""}${path}`, input ? `input=${encodeURIComponent(JSON.stringify(input))}` : null].filter(Boolean).join("?");
       };
 
       const func = (input: any, options: any) => {

@@ -15,7 +15,7 @@ const router = {
 };
 
 const fetch = (key: string) => {
-  const route = key.split("/").slice(2);
+  const route = key.split("/").slice(1);
   const func = route.reduce(
     (acc, cur) => acc[cur as "users"] as any,
     router
@@ -31,7 +31,7 @@ describe("", () => {
       return createResponse(fetch(key));
     }
 
-    const client = createClient<typeof router>("/api")(fetcher);
+    const client = createClient<typeof router>()(fetcher);
 
     function Page() {
       const { data } = useQuery(client.query.users.getUser());
@@ -57,7 +57,7 @@ describe("", () => {
       createSWRMiddleware(),
     ]);
 
-    const client = createClient<typeof router>("/api")(fetcherWithMiddleware);
+    const client = createClient<typeof router>()(fetcherWithMiddleware);
 
     expect(count).toBe(0);
     const result = await Promise.all([
@@ -80,7 +80,7 @@ describe("", () => {
       createSWRMiddleware(),
     ]);
 
-    const client = createClient<typeof router>("/api")(fetcherWithMiddleware);
+    const client = createClient<typeof router>()(fetcherWithMiddleware);
 
     function Page() {
       const { data } = useQuery(client.query.users.getUser());
@@ -122,7 +122,7 @@ describe("", () => {
         const fetcherWithMiddleware = withMiddleware(fetcher, [
           createSWRMiddleware({ cache, mutate }),
         ]);
-        return createClient<typeof router>("/api")(fetcherWithMiddleware);
+        return createClient<typeof router>()(fetcherWithMiddleware);
       }, []);
 
       const { data } = useQuery(client.query.users.getUser());
