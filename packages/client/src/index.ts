@@ -181,6 +181,7 @@ export const createClient = <TRouter extends Record<string, any>>(
                   }
                 })
                 .catch((err) => {
+                  console.error('[nanorpc] CLIENT SIDE ERROR:', err);
                   reject("SERVER_ERROR");
                 });
             }

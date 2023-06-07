@@ -14,26 +14,35 @@ type Next<TInput, TContext> = Promise<{
   context: TContext;
 }>;
 
-type MiddlewareFunc<TInput, TContext> = (
+type MiddlewareFunc<
+  TInput,
+  TContext,
+  TNextInput,
+  TNextContext extends Record<string, any>,
+  TNextError extends string
+> = (
   input: TInput,
   ctx: TContext,
   next: <NextInput, NextContext>(
     input: NextInput,
     context: NextContext
   ) => Next<NextInput, TContext & NextContext>
-) => Promise<Awaited<ReturnType<typeof next>> | RPCError>;
+) => Promise<
+  | Awaited<ReturnType<typeof next<TNextInput, TNextContext>>>
+  | RPCError<TNextError>
+>;
 
 type SchemaFunc<TInput> = ZodType | ((input: TInput) => unknown);
 
-type QueryFunc<TInput, TContext> = (
+type QueryFunc<TInput, TContext, TNextResult> = (
   input: TInput,
   ctx: TContext
-) => unknown | Promise<unknown>;
+) => TNextResult;
 
-type MutateFunc<TInput, TContext> = (
+type MutateFunc<TInput, TContext, TNextResult> = (
   input: TInput,
   ctx: TContext
-) => unknown | Promise<unknown>;
+) => TNextResult;
 
 declare const is_error: unique symbol;
 
@@ -120,80 +129,66 @@ export type ProcedureBuilder<
     TOutput,
     TError | (F extends () => infer Result ? Extract<Result, RPCError> : never)
   >;
-  middleware: <F extends MiddlewareFunc<TInput, TContext>>(
-    f: F
-  ) => ReturnType<F> extends Promise<
-    Awaited<Next<infer NextInput, infer NextContext>> | RPCError
-  >
-    ? ProcedureBuilder<
-        TType,
-        NextInput,
-        NextContext,
-        TOutput,
-        TError | Extract<Awaited<ReturnType<F>>, RPCError>["error"]
-      >
-    : never;
-  query: <F extends QueryFunc<TInput, TContext>>(
-    f: F
+  middleware: <
+    TNextInput,
+    TNextContext extends Record<string, any>,
+    TNextError extends string
+  >(
+    f: MiddlewareFunc<TInput, TContext, TNextInput, TNextContext, TNextError>
+  ) => ProcedureBuilder<
+    TType,
+    TNextInput,
+    TNextContext,
+    TOutput,
+    TError | TNextError
+  >;
+  query: <TNextResult>(
+    f: QueryFunc<TInput, TContext, TNextResult>
   ) => PrettifyProcedure<
     Procedure<
       "query",
       unknown extends TInput ? undefined : TInput,
       TContext,
-      F extends (...args: any[]) => infer Result
-        ? Exclude<Awaited<Result>, RPCError | ErrorCodes<string>>
-        : never,
+      Exclude<Awaited<TNextResult>, RPCError | ErrorCodes<string>>,
       | TError
-      | (F extends (...args: any[]) => infer Result
-          ?
-              | UnpackErrorCodes<Extract<Awaited<Result>, ErrorCodes<string>>>
-              | Extract<Awaited<Result>, RPCError>["error"]
-          : never)
+      | UnpackErrorCodes<Extract<Awaited<TNextResult>, ErrorCodes<string>>>
+      | Extract<Awaited<TNextResult>, RPCError>["error"]
     >
   >;
-  mutate: <F extends MutateFunc<TInput, TContext>>(
-    f: F
+  mutate: <TNextResult>(
+    f: MutateFunc<TInput, TContext, TNextResult>
   ) => PrettifyProcedure<
     Procedure<
       "mutate",
       unknown extends TInput ? undefined : TInput,
       TContext,
-      F extends (...args: any[]) => infer Result
-        ? Exclude<Awaited<Result>, RPCError | ErrorCodes<string>>
-        : never,
+      Exclude<Awaited<TNextResult>, RPCError | ErrorCodes<string>>,
       | TError
-      | TError
-      | (F extends (...args: any[]) => infer Result
-          ?
-              | UnpackErrorCodes<Extract<Awaited<Result>, ErrorCodes<string>>>
-              | Extract<Awaited<Result>, RPCError>["error"]
-          : never)
+      | UnpackErrorCodes<Extract<Awaited<TNextResult>, ErrorCodes<string>>>
+      | Extract<Awaited<TNextResult>, RPCError>["error"]
     >
   >;
-  use: <F extends ProcedureBuilder<any, any, any, any, any>>(
-    f: F
-  ) => F extends ProcedureBuilder<
-    infer UType,
-    infer UInput,
-    infer UContext,
-    infer UOutput,
-    infer UError
-  >
-    ? ProcedureBuilder<
-        TType & UType,
-        UInput & TInput,
-        TContext & UContext,
-        TOutput,
-        TError | UError
-      >
-    : never;
+  use: <
+    UType extends "query" | "mutate",
+    UInput,
+    UContext,
+    UError extends ErrorCode
+  >(
+    f: ProcedureBuilder<UType, UInput, UContext, any, UError>
+  ) => ProcedureBuilder<
+    TType & UType,
+    UInput & TInput,
+    TContext & UContext,
+    TOutput,
+    TError | UError
+  >;
   state: () => ProcedureState<TType>;
 };
 
 export type ProcedureState<TType extends "query" | "mutate"> = {
-  main: QueryFunc<any, any> | MutateFunc<any, any>;
+  main: QueryFunc<any, any, any> | MutateFunc<any, any, any>;
   schemas: Set<SchemaFunc<any>>;
-  middlewares: Set<MiddlewareFunc<any, any>>;
+  middlewares: Set<MiddlewareFunc<any, any, any, any, any>>;
   type: TType;
   error: ErrorCode;
 };
@@ -322,23 +317,21 @@ const createBuilderFromState = <
     state: () => state,
   };
 
-  function middleware<F extends MiddlewareFunc<TInput, TContext>>(f: F) {
+  function middleware<
+    TNextInput,
+    TNextContext extends Record<string, any>,
+    TNextError extends string
+  >(f: MiddlewareFunc<TInput, TContext, TNextInput, TNextContext, TNextError>) {
     const newState = cloneState(state);
     newState.middlewares.add(f);
 
-    type Result = ReturnType<F> extends Promise<
-      Awaited<Next<infer NextInput, infer NextContext>> | RPCError
-    >
-      ? ProcedureBuilder<
-          TType,
-          NextInput,
-          NextContext,
-          TOutput,
-          TError | Extract<Awaited<ReturnType<F>>, RPCError>["error"]
-        >
-      : never;
-
-    return createBuilderFromState(newState) as Result;
+    return createBuilderFromState<
+      TType,
+      TNextInput,
+      TNextContext,
+      TOutput,
+      TError | TNextError
+    >(newState);
   }
 
   function schema<F extends SchemaFunc<TInput>>(f: F) {
@@ -360,7 +353,7 @@ const createBuilderFromState = <
     >(newState);
   }
 
-  function query<F extends QueryFunc<TInput, TContext>>(f: F) {
+  function query<TNextResult>(f: QueryFunc<TInput, TContext, TNextResult>) {
     const newState = cloneState(state) as ProcedureState<"query">;
     newState.type = "query";
     newState.main = f as any;
@@ -369,19 +362,14 @@ const createBuilderFromState = <
       "query",
       unknown extends TInput ? undefined : TInput,
       TContext,
-      F extends (...args: any[]) => infer Result
-        ? Exclude<Awaited<Result>, RPCError | ErrorCodes<string>>
-        : never,
+      Exclude<Awaited<TNextResult>, RPCError | ErrorCodes<string>>,
       | TError
-      | (F extends (...args: any[]) => infer Result
-          ?
-              | UnpackErrorCodes<Extract<Awaited<Result>, ErrorCodes<string>>>
-              | Extract<Awaited<Result>, RPCError>["error"]
-          : never)
+      | UnpackErrorCodes<Extract<Awaited<TNextResult>, ErrorCodes<string>>>
+      | Extract<Awaited<TNextResult>, RPCError>["error"]
     >(newState);
   }
 
-  function mutate<F extends MutateFunc<TInput, TContext>>(f: F) {
+  function mutate<TNextResult>(f: MutateFunc<TInput, TContext, TNextResult>) {
     const newState = cloneState(state) as ProcedureState<"mutate">;
     newState.type = "mutate";
     newState.main = f as any;
@@ -390,36 +378,21 @@ const createBuilderFromState = <
       "mutate",
       unknown extends TInput ? undefined : TInput,
       TContext,
-      F extends (...args: any[]) => infer Result
-        ? Exclude<Awaited<Result>, RPCError | ErrorCodes<string>>
-        : never,
+      Exclude<Awaited<TNextResult>, RPCError | ErrorCodes<string>>,
       | TError
-      | (F extends (...args: any[]) => infer Result
-          ?
-              | UnpackErrorCodes<Extract<Awaited<Result>, ErrorCodes<string>>>
-              | Extract<Awaited<Result>, RPCError>["error"]
-          : never)
+      | UnpackErrorCodes<Extract<Awaited<TNextResult>, ErrorCodes<string>>>
+      | Extract<Awaited<TNextResult>, RPCError>["error"]
     >(newState);
   }
 
-  function use<F extends ProcedureBuilder<any, any, any, any, any>>(
-    f: F
-  ): F extends ProcedureBuilder<
-    infer UType,
-    infer UInput,
-    infer UContext,
-    infer UOutput,
-    infer UError
-  >
-    ? ProcedureBuilder<
-        TType & UType,
-        UInput & TInput,
-        TContext & UContext,
-        TOutput,
-        TError | UError
-      >
-    : never {
-    const newState = cloneState(state);
+  function use<
+    UType extends "query" | "mutate",
+    UInput,
+    UContext,
+    UError extends ErrorCode,
+    F extends ProcedureBuilder<UType, UInput, UContext, any, UError>
+  >(f: F) {
+    const newState = cloneState(state) as ProcedureState<TType & UType>;
     const usedState = f.state();
     usedState.schemas.forEach((newSchema) => newState.schemas.add(newSchema));
     usedState.middlewares.forEach((newMiddleware) =>
@@ -427,12 +400,12 @@ const createBuilderFromState = <
     );
 
     return createBuilderFromState<
-      TType,
-      TInput,
-      TContext,
-      F extends (...args: any[]) => infer Result ? Awaited<Result> : never,
-      TError
-    >(newState) as any;
+      TType & UType,
+      UInput & TInput,
+      TContext & UContext,
+      TOutput,
+      TError | UError
+    >(newState);
   }
 };
 
