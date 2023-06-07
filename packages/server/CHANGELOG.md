@@ -1,5 +1,11 @@
 # @nanorpc/server
 
+## 0.0.19
+
+### Patch Changes
+
+- 28886c3: Use different Typescript inference pattern for procedure builder that is more portable
+
 ## 0.0.18
 
 ## 0.0.17
