@@ -1,6 +1,6 @@
 {
   "name": "@nanorpc/client",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@nanorpc/eslint-config": "0.0.0",
-    "@nanorpc/server": "0.0.19",
+    "@nanorpc/server": "0.0.20",
     "@nanorpc/tsconfig": "0.0.0",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^14.0.0",

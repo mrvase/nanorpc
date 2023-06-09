@@ -1,5 +1,11 @@
 # @nanorpc/client
 
+## 0.0.20
+
+### Patch Changes
+
+- 9baa769: Check if entry exists in fetch cache before modifying it
+
 ## 0.0.19
 
 ### Patch Changes
