@@ -131,7 +131,7 @@ function SWRDedupeMiddleware<TOptions extends Options>(
     if (options.swr) {
       // it will now be handled by SWR cache
       delete FETCH[key];
-    } else {
+    } else if (FETCH[key]) {
       FETCH[key][2] = result;
       FETCH[key][1] = undefined;
     }
