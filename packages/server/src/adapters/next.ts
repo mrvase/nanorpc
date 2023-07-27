@@ -74,7 +74,11 @@ export const createRouteHandler = <T extends Router>(
         status = 307;
       }
 
-      return new Response(JSON.stringify(data) ?? null, {
+      if (!(data instanceof ReadableStream)) {
+        data = JSON.stringify(data) ?? null;
+      }
+
+      return new Response(data, {
         status,
         headers: response.headers,
       });
