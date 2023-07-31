@@ -9,13 +9,11 @@ export type QUERY_SERVER<T extends (...args: any) => any> = T & {
 type InferArgs<TProcedure> = TProcedure extends (...args: infer Args) => any
   ? Args
   : never;
-type InferResult<TProcedure> = TProcedure extends (
-  ...args: any
-) => infer Result
+type InferResult<TProcedure> = TProcedure extends (...args: any) => infer Result
   ? Result
   : never;
 
-type Suspend<T> = { key: () => string, suspend: () => [T, any, any] };
+type Suspend<T> = { key: () => string; suspend: () => [T, any, any] };
 
 export type QUERY<T extends (...args: any) => any> = ((
   ...args: InferArgs<T>
@@ -35,20 +33,43 @@ export type Result<TQuery extends (...args: any) => any> = Exclude<
   ErrorCodes<string>
 >;
 
+/* 
+It creates two objects, one with static keys and one with dynamic keys.
+We need to do it like this to make cmd+click work in vscode (to go to definition)
+for static keys.
+*/
 type TurnIntoQueries<
   TRouter extends Record<string, any>,
   TOptions extends Partial<Options>
 > = {
   [Key in keyof TRouter as TRouter[Key] extends { __type: "mutate" }
     ? never
-    : Key]: TRouter[Key] extends QUERY_SERVER<infer Func>
-    ? QUERY<
-        (...args: ClientParams<Parameters<Func>, TOptions & NativeOptions<Result<Func>, Parameters<Func>[0]>>) => ReturnType<Func>
-      >
-    : TRouter[Key] extends Record<string, any>
-    ? TurnIntoQueries<TRouter[Key], TOptions>
-    : never;
-}  & {};
+    : Key extends `[${string}]`
+    ? never
+    : Key]: TurnChildIntoQueries<TRouter[Key], TOptions>;
+} & {
+  [Key in keyof TRouter as TRouter[Key] extends { __type: "mutate" }
+    ? never
+    : Key extends `[${string}]`
+    ? string
+    : never]: TurnChildIntoQueries<TRouter[Key], TOptions>;
+} & {};
+
+type TurnChildIntoQueries<
+  TChildRouter extends any,
+  TOptions extends Partial<Options>
+> = TChildRouter extends QUERY_SERVER<infer Func>
+  ? QUERY<
+      (
+        ...args: ClientParams<
+          Parameters<Func>,
+          TOptions & NativeOptions<Result<Func>, Parameters<Func>[0]>
+        >
+      ) => ReturnType<Func>
+    >
+  : TChildRouter extends Record<string, any>
+  ? TurnIntoQueries<TChildRouter, TOptions> & {}
+  : never;
 
 type TurnIntoMutations<
   TRouter extends Record<string, any>,
@@ -56,14 +77,32 @@ type TurnIntoMutations<
 > = {
   [Key in keyof TRouter as TRouter[Key] extends { __type: "query" }
     ? never
-    : Key]: TRouter[Key] extends MUTATE<infer Func>
-    ? MUTATE<
-        (...args: ClientParams<Parameters<Func>, TOptions & NativeOptions<Result<Func>, Parameters<Func>[0]>>) => ReturnType<Func>
-      >
-    : TRouter[Key] extends Record<string, any>
-    ? TurnIntoMutations<TRouter[Key], TOptions>
-    : never;
+    : Key extends `[${string}]`
+    ? never
+    : Key]: TurnChildIntoMutations<TRouter[Key], TOptions>;
+} & {
+  [Key in keyof TRouter as TRouter[Key] extends { __type: "query" }
+    ? never
+    : Key extends `[${string}]`
+    ? string
+    : never]: TurnChildIntoMutations<TRouter[Key], TOptions>;
 } & {};
+
+type TurnChildIntoMutations<
+  TChildRouter extends any,
+  TOptions extends Partial<Options>
+> = TChildRouter extends MUTATE<infer Func>
+  ? MUTATE<
+      (
+        ...args: ClientParams<
+          Parameters<Func>,
+          TOptions & NativeOptions<Result<Func>, Parameters<Func>[0]>
+        >
+      ) => ReturnType<Func>
+    >
+  : TChildRouter extends Record<string, any>
+  ? TurnIntoMutations<TChildRouter, TOptions> & {}
+  : never;
 
 export type Options = {
   method: "GET" | "POST";
@@ -73,7 +112,7 @@ export type Options = {
 type NativeOptions<TResult, TInput> = {
   onError?: (error: string, input: TInput) => void;
   onSuccess?: (result: TResult, input: TInput) => void;
-}
+};
 
 export type Fetcher<TOptions> = (
   key: string,
@@ -109,27 +148,25 @@ export function withMiddleware<
   );
 }
 
-type CreateClientWithOptions<TRouter extends Record<string, any>, TOptions extends Partial<Options>> = {
-  query: 
-    TurnIntoQueries<
-      TRouter,
-      TOptions
-    >
-  ;
-  mutate: 
-    TurnIntoMutations<
-      TRouter,
-      TOptions
-    >;
+type CreateClientWithOptions<
+  TRouter extends Record<string, any>,
+  TOptions extends Partial<Options>
+> = {
+  query: TurnIntoQueries<TRouter, TOptions>;
+  mutate: TurnIntoMutations<TRouter, TOptions>;
 } & {};
 
-type InferFetcherOptions<TFetcher extends Fetcher<any>> = TFetcher extends Fetcher<infer TOptions> ? Partial<TOptions> : never;
+type InferFetcherOptions<TFetcher extends Fetcher<any>> =
+  TFetcher extends Fetcher<infer TOptions> ? Partial<TOptions> : never;
 
-export type CreateClient<TRouter extends Record<string, any>, TFetcher extends Fetcher<any>> = CreateClientWithOptions<TRouter, InferFetcherOptions<TFetcher>> & {};
+export type CreateClient<
+  TRouter extends Record<string, any>,
+  TFetcher extends Fetcher<any>
+> = CreateClientWithOptions<TRouter, InferFetcherOptions<TFetcher>> & {};
 
 export const createClient = <TRouter extends Record<string, any>>(
   clientOptions: { url?: string } = {}
-  ) => {
+) => {
   return <TFetcher extends Fetcher<any>>(
     fetcher: TFetcher,
     globalOptions?: InferFetcherOptions<TFetcher>
@@ -138,7 +175,12 @@ export const createClient = <TRouter extends Record<string, any>>(
 
     const createProxy = (type: "query" | "mutate", path: string): any => {
       const getKey = (input: any) => {
-        return [`${clientOptions.url ?? ""}${path}`, input ? `input=${encodeURIComponent(JSON.stringify(input))}` : null].filter(Boolean).join("?");
+        return [
+          `${clientOptions.url ?? ""}${path}`,
+          input ? `input=${encodeURIComponent(JSON.stringify(input))}` : null,
+        ]
+          .filter(Boolean)
+          .join("?");
       };
 
       const func = (input: any, options: any) => {
@@ -151,13 +193,15 @@ export const createClient = <TRouter extends Record<string, any>>(
         };
         let key = () => {
           suspended = true;
-          return getKey(isPost ? undefined : input)
-        }
+          return getKey(isPost ? undefined : input);
+        };
 
         const throwOnError = options?.swr === true;
 
         const promise = new Promise((resolve, reject_) => {
-          const reject = throwOnError ? reject_ : (error: string) => resolve({ error });
+          const reject = throwOnError
+            ? reject_
+            : (error: string) => resolve({ error });
 
           queueMicrotask(() => {
             if (suspended) {
@@ -170,18 +214,16 @@ export const createClient = <TRouter extends Record<string, any>>(
                 ...options,
               })
                 .then((result) => {
-                  if (
-                    isError(result)
-                  ) {
-                    options?.onError?.(result.error, input)
+                  if (isError(result)) {
+                    options?.onError?.(result.error, input);
                     reject(result.error);
                   } else {
-                    options?.onSuccess?.(result, input)
+                    options?.onSuccess?.(result, input);
                     resolve(result);
                   }
                 })
                 .catch((err) => {
-                  console.error('[nanorpc] CLIENT SIDE ERROR:', err);
+                  console.error("[nanorpc] CLIENT SIDE ERROR:", err);
                   reject("SERVER_ERROR");
                 });
             }
@@ -221,4 +263,4 @@ export const createClient = <TRouter extends Record<string, any>>(
 
 export const isError = (value: unknown): value is ErrorCodes<string> => {
   return value !== null && typeof value === "object" && "error" in value;
-}
+};

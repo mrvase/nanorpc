@@ -412,11 +412,11 @@ const createBuilderFromState = <
 export const createProcedure = <
   TContext extends Record<string, any> | CreateContext = {}
 >() => {
-  type InitialContext = TContext extends (...args: any[]) => infer Context
+  type InitialContext = (TContext extends (...args: any[]) => infer Context
     ? Partial<Awaited<Context>>
     : TContext extends Promise<object>
     ? Partial<Awaited<TContext>>
-    : Partial<TContext>;
+    : Partial<TContext>) & { params: Record<string, string> } & {};
 
   const initialState: ProcedureState<"query"> = {
     type: "query",

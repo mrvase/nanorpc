@@ -62,9 +62,30 @@ export async function handleRequest<T extends Router>(
 
   Object.assign(context, contextFromClient);
 
-  const [name] = route.splice(route.length - 1, 1);
-  const parent = route.reduce((acc: Router, el) => acc?.[el] as Router, router);
-  const func = parent?.[name] as Procedure<any, any, any, any, any>;
+  const params: Record<string, string> = {};
+
+  let func = router as any;
+
+  route.forEach((el) => {
+    const candidate = func?.[el];
+    if (candidate !== undefined) {
+      func = candidate;
+      return;
+    }
+
+    const keys = Object.keys(func);
+    const key = keys.find((k) => k.match(/\[.*\]/));
+    if (key) {
+      const name = key.slice(1, -1);
+      params[name] = el;
+      func = func[key];
+      return;
+    }
+
+    func = undefined;
+  });
+
+  Object.assign(context, { params });
 
   if (!func) {
     console.error(`Route not found: ${route.join("/")}`);
