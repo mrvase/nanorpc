@@ -1,5 +1,11 @@
 # @nanorpc/client
 
+## 0.0.22
+
+### Patch Changes
+
+- 511c78b: Support dynamic routes with square bracket syntax
+
 ## 0.0.21
 
 ## 0.0.20
