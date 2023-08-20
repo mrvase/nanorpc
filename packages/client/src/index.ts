@@ -165,7 +165,7 @@ export type CreateClient<
 > = CreateClientWithOptions<TRouter, InferFetcherOptions<TFetcher>> & {};
 
 export const createClient = <TRouter extends Record<string, any>>(
-  clientOptions: { url?: string } = {}
+  clientOptions: { url?: string, getUrl?: (options: Record<string, string>) => string | undefined } = {}
 ) => {
   return <TFetcher extends Fetcher<any>>(
     fetcher: TFetcher,
@@ -174,9 +174,11 @@ export const createClient = <TRouter extends Record<string, any>>(
     const PROXY_CACHE: Record<string, any> = {};
 
     const createProxy = (type: "query" | "mutate", path: string): any => {
-      const getKey = (input: any) => {
+      const getKey = (input: any, options: any) => {
+        const urlFromOptions = clientOptions.getUrl && clientOptions.getUrl(options);
+
         return [
-          `${clientOptions.url ?? ""}${path}`,
+          `${urlFromOptions ?? clientOptions.url ?? ""}${path}`,
           input ? `input=${encodeURIComponent(JSON.stringify(input))}` : null,
         ]
           .filter(Boolean)
@@ -193,7 +195,7 @@ export const createClient = <TRouter extends Record<string, any>>(
         };
         let key = () => {
           suspended = true;
-          return getKey(isPost ? undefined : input);
+          return getKey(isPost ? undefined : input, options);
         };
 
         const throwOnError = options?.swr === true;
@@ -207,7 +209,7 @@ export const createClient = <TRouter extends Record<string, any>>(
             if (suspended) {
               resolve(null);
             } else {
-              fetcher(getKey(isPost ? undefined : input), {
+              fetcher(getKey(isPost ? undefined : input, options), {
                 method: isPost ? "POST" : "GET",
                 ...(isPost && { body: JSON.stringify({ input }) }),
                 ...globalOptions,

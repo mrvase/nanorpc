@@ -41,11 +41,11 @@ export function useQuery<
   const [input, options, procedure] = promise ? (promise as any).suspend() : [];
 
   const [key, setKey] = React.useState(
-    promise ? procedure.__getKey(input) : undefined
+    promise ? procedure.__getKey(input, options) : undefined
   );
 
   if (!key && promise) {
-    setKey(procedure.__getKey(input));
+    setKey(procedure.__getKey(input, options));
   }
 
   const fetcher = React.useCallback(
@@ -264,7 +264,7 @@ export function useMutation<
   );
 
   const swr = useSWRMutation(
-    (procedure as any).__getKey({}),
+    (procedure as any).__getKey({}, options),
     fetcher,
     SWROptions
   );
