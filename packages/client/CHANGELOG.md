@@ -1,5 +1,11 @@
 # @nanorpc/client
 
+## 0.0.23
+
+### Patch Changes
+
+- 63712cf: Add option to get url from query/mutation options
+
 ## 0.0.22
 
 ### Patch Changes
